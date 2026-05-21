@@ -7,6 +7,11 @@ data/
 # Campaign configs with real profile IDs
 campaigns/
 
+# Real forum configs (with actual domains/selectors)
+config/forums/massagevua.net.json
+config/forums/clubvn.net.json
+config/forums/congdongthugian.com.json
+
 # Logs and temp files
 *.log
 *.zip

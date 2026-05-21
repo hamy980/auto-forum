@@ -1,8 +1,8 @@
 {
-  "id": "massagevua.net",
-  "label": "MassageVua",
-  "baseUrl": "https://massagevua.net",
-  "composeUrlTemplate": "https://massagevua.net/conversations/add?to={recipient}",
+  "id": "sample-forum",
+  "label": "SampleForum",
+  "baseUrl": "https://sample-forum.example.com",
+  "composeUrlTemplate": "https://sample-forum.example.com/conversations/add?to={recipient}",
   "recipientEncoding": "xenforo-plus",
   "selectors": {
     "title": "input[name='title']",

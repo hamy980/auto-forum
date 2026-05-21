@@ -32,37 +32,37 @@ scripts/
 
 ### 1. Campaign Run
 ```bash
-node scripts/runner.js --campaign massagevua-greet3
-node scripts/runner.js --campaign massagevua-greet3 --resume    # continue after crash
-node scripts/runner.js --campaign massagevua-greet3 --profiles id1,id2  # specific profiles
+node scripts/runner.js --campaign <campaign-id>
+node scripts/runner.js --campaign <campaign-id> --resume    # continue after crash
+node scripts/runner.js --campaign <campaign-id> --profiles id1,id2  # specific profiles
 ```
 
 ### 2. Check Unread Inbox
 ```bash
-node scripts/reply-harvest.js --forum massagevua.net --profile <id>
+node scripts/reply-harvest.js --forum <forum-id> --profile <profile-id>
 ```
 
 ### 3. AI-Powered Reply
 ```bash
-node scripts/ai-reply.js --forum massagevua.net --dry-run     # preview AI replies
-node scripts/ai-reply.js --forum massagevua.net               # generate & save
+node scripts/ai-reply.js --forum <forum-id> --dry-run     # preview AI replies
+node scripts/ai-reply.js --forum <forum-id>               # generate & save
 ```
 
 ### 4. Send Reply
 ```bash
-node scripts/reply-send.js --forum massagevua.net --profile <id> --url <conversation_url> --content "reply text"
+node scripts/reply-send.js --forum <forum-id> --profile <profile-id> --url <conversation-url> --content "reply text"
 ```
 
 ### 5. Follow-up Check
 ```bash
-node scripts/followup-check.js --forum massagevua.net --profile <id> --campaign massagevua-greet3
-node scripts/followup-check.js --forum massagevua.net --profile <id> --dry-run  # classify without browser
+node scripts/followup-check.js --forum <forum-id> --profile <profile-id> --campaign <campaign-id>
+node scripts/followup-check.js --forum <forum-id> --profile <profile-id> --dry-run  # classify without browser
 ```
 
 ### 6. GPM Profile Management
 ```bash
 node scripts/gpm-list.js --groups
-node scripts/gpm-list.js --profiles --search massagevua.net
+node scripts/gpm-list.js --profiles --search <keyword>
 ```
 
 ## Configuration
@@ -70,10 +70,10 @@ node scripts/gpm-list.js --profiles --search massagevua.net
 ### Forum Config (`config/forums/<forum>.json`)
 ```json
 {
-  "id": "massagevua.net",
-  "baseUrl": "https://massagevua.net",
-  "composeUrlTemplate": "https://massagevua.net/conversations/add?to={recipient}",
-  "selectors": { "title": "input[name='title']", "body": "[contenteditable='true']", "submit": "button.button--icon--conversation" },
+  "id": "example-forum",
+  "baseUrl": "https://example-forum.com",
+  "composeUrlTemplate": "https://example-forum.com/conversations/add?to={recipient}",
+  "selectors": { "title": "input[name='title']", "body": "[contenteditable='true']", "submit": "button.submit" },
   "delayMs": { "min": 60000, "max": 70000 },
   "timeouts": { "navigation": 60000, "cdpReadyMs": 30000 },
   "retry": { "maxAttempts": 3, "cooldownFallbackMs": 70000 }
@@ -85,7 +85,7 @@ node scripts/gpm-list.js --profiles --search massagevua.net
 {
   "provider": "ollama",
   "baseUrl": "http://localhost:11434",
-  "model": "deepseek-v4-flash:cloud",
+  "model": "your-model-name",
   "temperature": 0.7,
   "maxTokens": 500
 }
@@ -97,12 +97,12 @@ Define who the AI agent is, rules (DO/DON'T), tone, and knowledge base. Per-foru
 ### Campaign Config (`campaigns/<id>.json`)
 ```json
 {
-  "id": "massagevua-greet3",
-  "forumId": "massagevua.net",
-  "profileIds": ["..."],
-  "memberListPath": "../data/massagevua.net/camps_greeting_01.txt",
-  "titleTemplates": ["Chào {first_name}, làm quen nhé!"],
-  "bodyTemplates": ["Chào {first_name}! Mình {mới tham gia|vừa gia nhập} diễn đàn..."]
+  "id": "sample-greeting",
+  "forumId": "example-forum",
+  "profileIds": ["profile-uuid-1", "profile-uuid-2"],
+  "memberListPath": "../data/example-forum/members.txt",
+  "titleTemplates": ["Hello {first_name}, nice to meet you!"],
+  "bodyTemplates": ["Hey {first_name}! I'm {new here|just joined} on the forum. {Let's connect!|Feel free to say hi!}"]
 }
 ```
 
@@ -110,7 +110,7 @@ Define who the AI agent is, rules (DO/DON'T), tone, and knowledge base. Per-foru
 
 Use `{option1|option2|option3}` in any template for random selection each time:
 ```
-"Chào {first_name}! Mình {mới tham gia|vừa gia nhập|mới đến} diễn đàn."
+"Hello {first_name}! I'm {new here|just joined|a newcomer} on the forum."
 ```
 3 body templates × 3 spin blocks = up to 81 unique variants.
 
@@ -156,10 +156,9 @@ config/
   ai.json                     Ollama/AI provider config
   agent.md                    AI persona, rules, knowledge
   forums/
-    massagevua.net.json        Full forum config (selectors, inbox, timeouts)
-    clubvn.net.json            Basic config
+    <forum>.json              Per-forum config (selectors, inbox, timeouts)
 campaigns/
-  massagevua-greet*.json      Campaign definitions
+  <campaign>.json             Campaign definitions
 scripts/
   lib/
     gpm-client.js             GPM REST API client
@@ -182,7 +181,7 @@ scripts/
   gpm-list.js                  GPM discovery
 data/
   <forum>/
-    camps_greeting_*.txt       Member lists
+    members.txt                Member lists
     sent/                      Per-profile send logs
     reply/                     Harvested conversation .md files
     conversations/             Follow-up tracking .md files
@@ -197,6 +196,6 @@ docs/
 ## Requirements
 
 - Node.js 18+
-- GPM Login running locally (`http://127.0.0.1:19995`)
-- Ollama running locally for AI replies (`http://localhost:11434`)
+- GPM Login running locally
+- Ollama running locally for AI replies
 - Playwright (`npm install`)

@@ -1,0 +1,38 @@
+{{SKILL_PREFIX}}
+
+Task ID: {{TASK_ID}}
+Stage: coder
+
+Primary task:
+{{TASK_PROMPT}}
+
+Working directory:
+{{WORKDIR}}
+
+Context files:
+- State JSON: {{STATE_JSON_PATH}}
+- Latest report JSON: {{LATEST_REPORT_JSON_PATH}}
+- Latest report Markdown: {{LATEST_REPORT_MD_PATH}}
+
+Requirements:
+- Implement only the requested work.
+- Keep unrelated code unchanged.
+- If blocked, explain the blocker clearly.
+- End your response with a JSON block using the exact markers below.
+
+Response format:
+1. Markdown report with summary, files changed, risks, and tests.
+2. Final JSON block:
+
+<<<AI_FLOW_JSON_START>>>
+{
+  "task_id": "{{TASK_ID}}",
+  "agent": "coder",
+  "status": "done|blocked",
+  "decision": "done|blocked",
+  "summary": "short summary",
+  "files_changed": ["relative/path"],
+  "tests": ["test command or not run"],
+  "findings": []
+}
+<<<AI_FLOW_JSON_END>>>

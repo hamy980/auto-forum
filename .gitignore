@@ -1,0 +1,20 @@
+node_modules/
+runtime/
+
+# Local data (real member lists, sent logs, conversations, replies)
+data/
+
+# Campaign configs with real profile IDs
+campaigns/
+
+# Logs and temp files
+*.log
+*.zip
+browser-service.json
+browser-service.log
+
+# AI orchestrator runs
+ai-orchestrator/runs/
+
+# Chrome profile data
+chrome-profile/

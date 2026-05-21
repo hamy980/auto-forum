@@ -1,0 +1,59 @@
+{
+  "id": "massagevua.net",
+  "label": "MassageVua",
+  "baseUrl": "https://massagevua.net",
+  "composeUrlTemplate": "https://massagevua.net/conversations/add?to={recipient}",
+  "recipientEncoding": "xenforo-plus",
+  "selectors": {
+    "title": "input[name='title']",
+    "body": "[contenteditable='true']",
+    "submit": "button.button--icon--conversation"
+  },
+  "submitIndex": 0,
+  "successUrlIncludes": "/conversations/",
+  "cooldownErrorIncludes": "You must wait at least",
+  "permissionErrorIncludes": "do not have permission",
+  "validationErrorSelectors": [
+    ".blockMessage",
+    ".message--error",
+    ".formRow--errors"
+  ],
+  "inbox": {
+    "listUrl": "/conversations/",
+    "popupTrigger": ".p-navgroup-link--conversations",
+    "unreadBadgeAttr": "data-badge",
+    "popupBody": ".js-convMenuBody",
+    "popupRow": ".menu-row",
+    "popupRowHighlighted": ".menu-row--highlighted",
+    "popupConversationLink": ".fauxBlockLink-blockLink",
+    "popupTime": "time[data-time]"
+  },
+  "conversation": {
+    "messageBlock": ".message",
+    "messageBody": ".message-body .bbWrapper",
+    "messageAuthor": ".message-name a",
+    "messageTime": "time[data-time]",
+    "replyEditor": ".fr-element[contenteditable='true']",
+    "replySubmit": "button.button--icon--reply"
+  },
+  "delayMs": {
+    "min": 60000,
+    "max": 70000
+  },
+  "timeouts": {
+    "navigation": 60000,
+    "waitFor": 15000,
+    "closeBeforeStartMs": 2000,
+    "cdpReadyMs": 30000,
+    "cdpPollIntervalMs": 2000,
+    "postSubmitMs": 1000,
+    "closeProfileMs": 15000
+  },
+  "retry": {
+    "maxAttempts": 3,
+    "postClickPollMs": 12000,
+    "postClickPollIntervalMs": 500,
+    "networkRetryDelayMs": 3000,
+    "cooldownFallbackMs": 70000
+  }
+}

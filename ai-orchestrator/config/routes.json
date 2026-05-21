@@ -1,0 +1,35 @@
+{
+  "stages": {
+    "coder": {
+      "skillPrefix": "/sparc:coder",
+      "defaultNextStage": "reviewer",
+      "decisionMap": {
+        "done": "reviewer",
+        "approve": "reviewer",
+        "changes_requested": "reviewer",
+        "blocked": "planner"
+      }
+    },
+    "reviewer": {
+      "skillPrefix": "/sparc:reviewer",
+      "defaultNextStage": "planner",
+      "decisionMap": {
+        "approve": "complete",
+        "changes_requested": "fixer",
+        "done": "planner",
+        "blocked": "planner",
+        "unclear": "planner"
+      }
+    },
+    "fixer": {
+      "skillPrefix": "/sparc:debug",
+      "defaultNextStage": "reviewer",
+      "decisionMap": {
+        "done": "reviewer",
+        "approve": "reviewer",
+        "blocked": "planner",
+        "unclear": "planner"
+      }
+    }
+  }
+}

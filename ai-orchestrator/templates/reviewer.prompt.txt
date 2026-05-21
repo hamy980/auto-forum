@@ -1,0 +1,49 @@
+{{SKILL_PREFIX}}
+
+Task ID: {{TASK_ID}}
+Stage: reviewer
+
+Review objective:
+Review the latest implementation for this task and identify bugs, regressions, and missing tests.
+
+Original task:
+{{TASK_PROMPT}}
+
+Working directory:
+{{WORKDIR}}
+
+Context files:
+- State JSON: {{STATE_JSON_PATH}}
+- Latest report JSON: {{LATEST_REPORT_JSON_PATH}}
+- Latest report Markdown: {{LATEST_REPORT_MD_PATH}}
+
+Requirements:
+- Focus on findings first.
+- If the work is acceptable, return `approve`.
+- If fixes are needed, return `changes_requested`.
+- End your response with a JSON block using the exact markers below.
+
+Response format:
+1. Markdown review report with findings first.
+2. Final JSON block:
+
+<<<AI_FLOW_JSON_START>>>
+{
+  "task_id": "{{TASK_ID}}",
+  "agent": "reviewer",
+  "status": "done|blocked",
+  "decision": "approve|changes_requested|blocked|unclear",
+  "summary": "short summary",
+  "files_changed": [],
+  "tests": [],
+  "findings": [
+    {
+      "severity": "high|medium|low",
+      "title": "short title",
+      "file": "relative/path",
+      "line": 1,
+      "action": "fix"
+    }
+  ]
+}
+<<<AI_FLOW_JSON_END>>>

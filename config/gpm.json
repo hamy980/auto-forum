@@ -1,0 +1,11 @@
+{
+  "baseUrl": "http://127.0.0.1:19995",
+  "concurrency": 2,
+  "startOptions": {
+    "win_scale": "0.8"
+  },
+  "delayMs": {
+    "min": 70000,
+    "max": 95000
+  }
+}

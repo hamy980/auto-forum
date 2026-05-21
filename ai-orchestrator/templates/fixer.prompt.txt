@@ -1,0 +1,41 @@
+{{SKILL_PREFIX}}
+
+Task ID: {{TASK_ID}}
+Stage: fixer
+
+Fix objective:
+Apply only the fixes requested by the latest reviewer report.
+
+Original task:
+{{TASK_PROMPT}}
+
+Working directory:
+{{WORKDIR}}
+
+Context files:
+- State JSON: {{STATE_JSON_PATH}}
+- Latest report JSON: {{LATEST_REPORT_JSON_PATH}}
+- Latest report Markdown: {{LATEST_REPORT_MD_PATH}}
+
+Requirements:
+- Fix only listed issues.
+- Avoid unrelated refactors.
+- If a requested fix is invalid, explain why.
+- End your response with a JSON block using the exact markers below.
+
+Response format:
+1. Markdown fix report with changed files, fixes applied, and residual risks.
+2. Final JSON block:
+
+<<<AI_FLOW_JSON_START>>>
+{
+  "task_id": "{{TASK_ID}}",
+  "agent": "fixer",
+  "status": "done|blocked",
+  "decision": "done|blocked|unclear",
+  "summary": "short summary",
+  "files_changed": ["relative/path"],
+  "tests": ["test command or not run"],
+  "findings": []
+}
+<<<AI_FLOW_JSON_END>>>

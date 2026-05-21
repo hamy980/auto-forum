@@ -1,0 +1,21 @@
+{
+  "name": "browser-automation-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "browser:start": "node scripts/browser-service.js",
+    "browser:state": "node scripts/browser-client.js state",
+    "browser:health": "node scripts/browser-client.js health",
+    "browser:tabs": "node scripts/browser-client.js tabs",
+    "browser:stop": "node scripts/browser-client.js stop",
+    "demo:clubvn": "node scripts/open-clubvn.js",
+    "campaign:run": "node scripts/run-campaign.js",
+    "test:running-pm": "node scripts/test-running-profiles-pm.js",
+    "gpm:list": "node scripts/gpm-list.js",
+    "stress:rate-limit": "node scripts/stress-rate-limit.js"
+  },
+  "dependencies": {
+    "playwright": "^1.54.1"
+  }
+}

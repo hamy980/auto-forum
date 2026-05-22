@@ -1,12 +1,14 @@
 import { chromium } from "playwright";
 import { loadCampaign, loadForumConfig, loadMemberList } from "./lib/forum-config.js";
+import { loadPlatformConfig, loadVerificationApiConfig } from "./lib/platform-config.js";
 import { loadContentPack, buildCampaignContent } from "./lib/campaign-sources.js";
-import { configDir, dataDir, runtimeDir } from "./lib/paths.js";
+import { configDir, dataDir, projectRoot, runtimeDir } from "./lib/paths.js";
 import { ensureDir, fillTemplate, normalizeRecipientForForum, parseFirstName, pickOne, randomInt, readJson, resolveMaybeRelative, sleep } from "./lib/utils.js";
 import { GpmClient } from "./lib/gpm-client.js";
 import { collectNetworkDuring, getLocatorValue, setLocatorValue } from "./lib/playwright-helpers.js";
 import { ErrorTracker } from "./lib/error-tracker.js";
 import { appendResult, updateSummary, writeState, readState, resultPath } from "./lib/result-writer.js";
+import { telegramLogin, isAlreadyLoggedIn } from "./lib/telegram-login.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -314,12 +316,214 @@ async function runProfile({ gpmClient, gpmConfig, forumConfig, campaign, profile
   }
 }
 
+async function runTelegramProfile({ gpmClient, gpmConfig, platformConfig, campaign, profileId, recipientQueue, resume, accountsMap, apiConfig }) {
+  const tracker = new ErrorTracker(campaign.errorThreshold ?? 3);
+  const timeouts = platformConfig.timeouts ?? {};
+  const selectors = platformConfig.selectors ?? {};
+
+  const profileResponse = await gpmClient.getProfile(profileId);
+  const profile = profileResponse.data;
+  await gpmClient.closeProfile(profileId).catch(() => {});
+  await sleep(timeouts.closeBeforeStartMs ?? 2000);
+  const started = await gpmClient.startProfile(profileId, gpmConfig.startOptions ?? {});
+  const debuggingAddress = started.data.remote_debugging_address;
+  if (!debuggingAddress) {
+    throw new Error(`No remote_debugging_address for profile ${profileId}`);
+  }
+  console.log(`[${profileId}] Waiting for browser at ${debuggingAddress}...`);
+  await gpmClient.waitForCdpReady(debuggingAddress, { timeoutMs: timeouts.cdpReadyMs ?? 30000, intervalMs: timeouts.cdpPollIntervalMs ?? 2000 });
+  const browser = await chromium.connectOverCDP(`http://${debuggingAddress}`);
+  const context = browser.contexts()[0];
+  const page = context.pages()[0] ?? await context.newPage();
+
+  console.log(`[${profileId}] Profile started: ${profile.name}`);
+
+  // Navigate to Telegram first
+  await page.goto(platformConfig.baseUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
+  await sleep(3000);
+
+  // Login if needed
+  const loggedIn = await isAlreadyLoggedIn(page, platformConfig);
+  if (!loggedIn) {
+    const account = accountsMap[profileId];
+    if (!account) {
+      console.error(`[${profileId}] No account data for Telegram login`);
+      await sleep(timeouts.closeProfileMs ?? 15000);
+      await browser.close().catch(() => {});
+      await gpmClient.closeProfile(profileId).catch(() => {});
+      return;
+    }
+    console.log(`[${profileId}] Logging in with phone ${account.phone}...`);
+    const loginResult = await telegramLogin({
+      page, platformConfig, phone: account.phone,
+      twoFaPassword: account.twoFaPassword, apiConfig
+    });
+    if (loginResult.status !== "logged_in" && loginResult.status !== "already_logged_in") {
+      console.error(`[${profileId}] Login failed: ${loginResult.error}`);
+      await sleep(timeouts.closeProfileMs ?? 15000);
+      await browser.close().catch(() => {});
+      await gpmClient.closeProfile(profileId).catch(() => {});
+      return;
+    }
+    console.log(`[${profileId}] Logged in`);
+  }
+
+  try {
+    let sequence = (resume?.recipientIndex ?? 0);
+    let sentCount = 0;
+    let errorCount = 0;
+
+    while (recipientQueue.length > 0) {
+      if (tracker.shouldPause) {
+        const stopReason = `${tracker.errorStreak} consecutive errors: ${tracker.lastErrors.map(e => e.status).join(", ")}`;
+        console.error(`[${profileId}] PAUSED: ${stopReason}`);
+        await appendResult(runtimeDir, campaign.id, profileId, { STOP_REASON: stopReason });
+        await updateSummary(runtimeDir, campaign.id, profileId, { status: "paused", error: stopReason });
+        await writeState(runtimeDir, campaign.id, profileId, {
+          recipientQueue, recipientIndex: sequence, sequence, lastError: stopReason, lastStatus: "paused"
+        });
+        break;
+      }
+
+      const recipient = recipientQueue.shift();
+      sequence += 1;
+      const content = buildCampaignContent({
+        campaign,
+        contentPack: campaign.contentPackPath ? await loadContentPack(campaign.contentPackPath) : null,
+        recipient, profile, sequence,
+        skipTitle: true
+      });
+
+      console.log(`[${profileId}][#${sequence}] Sending to ${recipient}...`);
+
+      const startMs = Date.now();
+
+      try {
+        // Search for user and open chat
+        const searchInput = page.locator(selectors.searchInput ?? ".search-input").first();
+        await searchInput.click();
+        await sleep(500);
+        await searchInput.fill(recipient);
+        await sleep(2000);
+
+        const chatListSelector = selectors.sidebarChatList ?? ".chatlist";
+        const chatTitleSelector = selectors.chatTitle ?? ".peer-title";
+        const searchResults = page.locator(`${chatListSelector} ${chatTitleSelector}`);
+        const resultCount = await searchResults.count();
+
+        if (resultCount === 0) {
+          tracker.record("chat_not_found", `No results for "${recipient}"`);
+          errorCount += 1;
+          const entry = { action: "send_dm", member: recipient, status: "chat_not_found", error: `No results for "${recipient}"`, ms: Date.now() - startMs };
+          await appendResult(runtimeDir, campaign.id, profileId, entry);
+          await updateSummary(runtimeDir, campaign.id, profileId, entry);
+          await writeState(runtimeDir, campaign.id, profileId, { recipientQueue, recipientIndex: sequence, sequence, lastRecipient: recipient, lastError: entry.error, lastStatus: "chat_not_found" });
+          continue;
+        }
+
+        await searchResults.first().click();
+        await sleep(1500);
+
+        // Type and send message
+        const chatInput = page.locator(selectors.chatInput ?? ".input-message-input").first();
+        await chatInput.waitFor({ state: "visible", timeout: 10000 });
+        await setLocatorValue(chatInput, content.body);
+        await sleep(500);
+
+        const sendBtn = page.locator(selectors.sendButton ?? ".btn-send").first();
+        try {
+          await sendBtn.click({ timeout: 5000 });
+        } catch {
+          await page.keyboard.press("Enter");
+        }
+
+        // Wait for message to appear in chat
+        const pollTimeout = platformConfig.retry?.postClickPollMs ?? 8000;
+        const pollInterval = platformConfig.retry?.postClickPollIntervalMs ?? 500;
+        const pollStart = Date.now();
+        const searchSnippet = content.body.slice(0, 50);
+        let messageSent = false;
+
+        while (Date.now() - pollStart < pollTimeout) {
+          const bubbles = await page.locator(platformConfig.conversation?.messageBlock ?? ".bubble").all();
+          for (let i = Math.max(0, bubbles.length - 3); i < bubbles.length; i++) {
+            const text = await bubbles[i].textContent().catch(() => "");
+            if (text.includes(searchSnippet)) { messageSent = true; break; }
+          }
+          if (messageSent) break;
+          await sleep(pollInterval);
+        }
+
+        const elapsed = Date.now() - startMs;
+        const resultStatus = messageSent ? "sent" : "message_timeout";
+        const entry = { action: "send_dm", member: recipient, status: resultStatus, error: messageSent ? null : "Message did not appear in chat", ms: elapsed };
+
+        await appendResult(runtimeDir, campaign.id, profileId, entry);
+        await updateSummary(runtimeDir, campaign.id, profileId, entry);
+
+        if (messageSent) {
+          tracker.record("sent");
+          sentCount += 1;
+          console.log(`[${profileId}][#${sequence}] Sent to ${recipient} (${elapsed}ms)`);
+          const sentDir = path.join(dataDir, campaign.platformId ?? campaign.forumId, "sent");
+          await ensureDir(sentDir);
+          const sentFile = path.join(sentDir, `${profileId}_successful.txt`);
+          await fs.appendFile(sentFile, `${new Date().toISOString()}\t${recipient}\n`);
+        } else {
+          tracker.record(resultStatus, entry.error);
+          errorCount += 1;
+          console.error(`[${profileId}][#${sequence}] ${resultStatus}: ${entry.error} (${elapsed}ms)`);
+        }
+
+        await writeState(runtimeDir, campaign.id, profileId, { recipientQueue, recipientIndex: sequence, sequence, lastRecipient: recipient, lastError: messageSent ? null : entry.error, lastStatus: resultStatus });
+
+        // Clear search for next recipient
+        await searchInput.click();
+        await page.keyboard.press("Escape");
+        await sleep(500);
+      } catch (err) {
+        const elapsed = Date.now() - startMs;
+        tracker.record("network_error", err.message);
+        errorCount += 1;
+        console.error(`[${profileId}][#${sequence}] Error: ${err.message} (${elapsed}ms)`);
+        const entry = { action: "send_dm", member: recipient, status: "network_error", error: err.message, ms: elapsed };
+        await appendResult(runtimeDir, campaign.id, profileId, entry);
+        await updateSummary(runtimeDir, campaign.id, profileId, entry);
+      }
+
+      if (recipientQueue.length > 0 && !tracker.shouldPause) {
+        const delayMin = platformConfig.delayMs?.min ?? 15000;
+        const delayMax = platformConfig.delayMs?.max ?? 30000;
+        const delay = randomInt(delayMin, delayMax);
+        console.log(`[${profileId}] Waiting ${(delay / 1000).toFixed(0)}s before next recipient...`);
+        await sleep(delay);
+      }
+    }
+
+    if (!tracker.shouldPause) {
+      await appendResult(runtimeDir, campaign.id, profileId, { action: "campaign_complete", status: "done" });
+      await updateSummary(runtimeDir, campaign.id, profileId, { status: "done" });
+    }
+
+    console.log(`[${profileId}] Finished: ${sentCount} sent, ${errorCount} errors`);
+  } finally {
+    await sleep(timeouts.closeProfileMs ?? 15000);
+    await browser.close().catch(() => {});
+    await gpmClient.closeProfile(profileId).catch(() => {});
+    console.log(`[${profileId}] Profile stopped`);
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const campaign = await loadCampaign(args.campaignId);
-  const forumConfig = await loadForumConfig(campaign.forumId);
+  const configId = campaign.platformId ?? campaign.forumId;
+  const platformConfig = await loadPlatformConfig(configId);
+  const isTelegram = platformConfig.platform === "telegram";
+  const forumConfig = isTelegram ? platformConfig : await loadForumConfig(campaign.forumId);
   const gpmConfig = await readJson(`${configDir}/gpm.json`);
   const gpmClient = new GpmClient(gpmConfig.baseUrl);
+  const apiConfig = isTelegram ? await loadVerificationApiConfig() : null;
 
   let recipientQueue;
   let resumeState = null;
@@ -342,17 +546,34 @@ async function main() {
     throw new Error("No profile ids. Set campaign.profileIds or pass --profiles");
   }
 
-  console.log(`Campaign: ${args.campaignId} | Forum: ${campaign.forumId} | Recipients: ${recipientQueue.length} | Profiles: ${profileIds.length}`);
+  // Load accounts mapping for Telegram (profileId → phone + 2FA)
+  let accountsMap = {};
+  if (isTelegram && campaign.accountsPath) {
+    const accFile = path.isAbsolute(campaign.accountsPath) ? campaign.accountsPath : path.resolve(projectRoot, campaign.accountsPath);
+    const raw = await fs.readFile(accFile, "utf8");
+    for (const line of raw.split(/\r?\n/).filter(l => l.trim() && !l.startsWith("#"))) {
+      const [pid, phone, twoFa] = line.split(",").map(s => s.trim());
+      accountsMap[pid] = { phone, twoFaPassword: twoFa || null };
+    }
+  }
+
+  const platformLabel = isTelegram ? "Telegram" : `Forum: ${campaign.forumId}`;
+  console.log(`Campaign: ${args.campaignId} | ${platformLabel} | Recipients: ${recipientQueue.length} | Profiles: ${profileIds.length}`);
 
   // Distribute recipients across profiles (round-robin)
   const queues = [];
   for (let i = 0; i < profileIds.length; i++) queues.push([]);
   recipientQueue.forEach((r, i) => queues[i % profileIds.length].push(r));
 
+  // Pick the right runner based on platform
+  const runFn = isTelegram
+    ? (pid, q) => runTelegramProfile({ gpmClient, gpmConfig, platformConfig, campaign, profileId: pid, recipientQueue: q, resume: resumeState, accountsMap, apiConfig })
+    : (pid, q) => runProfile({ gpmClient, gpmConfig, forumConfig, campaign, profileId: pid, recipientQueue: q, resume: resumeState });
+
   // Run all profiles in parallel — each with its own queue and browser
   const results = await Promise.allSettled(
     profileIds.map((pid, i) =>
-      runProfile({ gpmClient, gpmConfig, forumConfig, campaign, profileId: pid, recipientQueue: queues[i], resume: resumeState })
+      runFn(pid, queues[i])
         .catch(err => {
           console.error(`[${pid}] Profile failed: ${err.message}`);
           return { profileId: pid, error: err.message };

@@ -84,13 +84,16 @@ export async function generateReply(aiConfig, systemPrompt, userPrompt) {
   };
 }
 
-export function buildConversationPrompt(chatLog, memberName, forumConfig) {
-  const forumLabel = forumConfig?.label ?? forumConfig?.id ?? "the forum";
-  const forumUrl = forumConfig?.baseUrl ?? "";
+export function buildConversationPrompt(chatLog, memberName, platformConfig) {
+  const isTelegram = platformConfig?.platform === "telegram";
+  const platformLabel = isTelegram
+    ? "Telegram"
+    : (platformConfig?.label ?? platformConfig?.id ?? "the forum");
+  const platformContext = isTelegram
+    ? `You are replying to a private chat on Telegram with ${memberName}.`
+    : `You are replying to a private conversation on the forum "${platformLabel}" (${platformConfig?.baseUrl ?? ""}).\n\nThe other person in this conversation is: ${memberName}`;
 
-  return `You are replying to a private conversation on the forum "${forumLabel}" (${forumUrl}).
-
-The other person in this conversation is: ${memberName}
+  return `${platformContext}
 
 --- CONVERSATION HISTORY ---
 ${chatLog}

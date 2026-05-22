@@ -1,0 +1,12 @@
+{
+  "id": "telegram-greet",
+  "platformId": "telegram",
+  "profileIds": ["profile-uuid-here"],
+  "memberListPath": "../data/telegram/users.txt",
+  "accountsPath": "../data/telegram/accounts.csv",
+  "bodyTemplates": [
+    "Chao {first_name}! Minh moi tham gia Telegram, muon ket ban nhe.",
+    "Hey {first_name}! Nice to meet you on Telegram.",
+    "Xin chao {recipient_name}, minh la thanh vien moi tren Telegram."
+  ]
+}

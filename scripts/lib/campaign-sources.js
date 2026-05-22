@@ -18,7 +18,7 @@ export async function loadMembersFromSource(memberSourcePath) {
     .filter((line) => !line.startsWith("#"));
 }
 
-export function buildCampaignContent({ campaign, contentPack, recipient, profile, sequence }) {
+export function buildCampaignContent({ campaign, contentPack, recipient, profile, sequence, skipTitle = false }) {
   const context = {
     campaign_id: campaign.id,
     recipient_name: recipient,
@@ -31,7 +31,7 @@ export function buildCampaignContent({ campaign, contentPack, recipient, profile
   const titleTemplates = contentPack?.titleTemplates ?? campaign.titleTemplates;
   const bodyTemplates = contentPack?.bodyTemplates ?? campaign.bodyTemplates;
   return {
-    title: resolveSpin(fillTemplate(pickOne(titleTemplates, sequence), context)),
+    title: skipTitle ? null : resolveSpin(fillTemplate(pickOne(titleTemplates, sequence), context)),
     body: resolveSpin(fillTemplate(pickOne(bodyTemplates, sequence), context))
   };
 }

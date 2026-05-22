@@ -12,6 +12,10 @@ config/forums/massagevua.net.json
 config/forums/clubvn.net.json
 config/forums/congdongthugian.com.json
 
+# Real platform configs
+config/platforms/telegram.json
+config/platforms/verification-api.json
+
 # Logs and temp files
 *.log
 *.zip

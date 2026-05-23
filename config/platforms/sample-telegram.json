@@ -1,0 +1,50 @@
+{
+  "id": "telegram",
+  "label": "Telegram Web K",
+  "platform": "telegram",
+  "baseUrl": "https://web.telegram.org/k/",
+  "login": {
+    "url": "https://web.telegram.org/k/",
+    "phoneLoginButton": "//span[contains(@class,'i18n') and text()='Log in by phone Number']",
+    "phoneTabButton": "//*[@id='auth-pages']/div/div[contains(@class,'tabs-container') and contains(@class,'auth-pages__container')]/div[contains(@class,'tabs-tab') and contains(@class,'page-signQR') and contains(@class,'active')]/div/div[contains(@class,'input-wrapper')]/button/div",
+    "phoneInput": "//*[@id='auth-pages']/div/div[contains(@class,'tabs-container') and contains(@class,'auth-pages__container')]/div[contains(@class,'tabs-tab') and contains(@class,'page-sign') and contains(@class,'active')]/div/div[contains(@class,'input-wrapper')]/div[contains(@class,'input-field') and contains(@class,'input-field-phone')]/div[contains(@class,'input-field-input')]",
+    "phoneSubmitButton": "//*[@id='auth-pages']/div/div[contains(@class,'tabs-container') and contains(@class,'auth-pages__container')]/div[contains(@class,'tabs-tab') and contains(@class,'page-sign') and contains(@class,'active')]/div/div[contains(@class,'input-wrapper')]/button[contains(@class,'btn-primary') and contains(@class,'btn-color-primary') and contains(@class,'rp')]/div",
+    "codeInput": "//*[@id='auth-pages']/div/div[contains(@class,'tabs-container') and contains(@class,'auth-pages__container')]/div[contains(@class,'tabs-tab') and contains(@class,'page-authCode') and contains(@class,'active')]/div/div[contains(@class,'input-wrapper')]/div/input",
+    "twoFaInput": "//*[@id='auth-pages']/div/div[contains(@class,'tabs-container') and contains(@class,'auth-pages__container')]/div[contains(@class,'tabs-tab') and contains(@class,'page-password') and contains(@class,'active')]/div/div[contains(@class,'input-wrapper')]/div/input[contains(@class,'input-field-input') and contains(@class,'is-empty')]",
+    "twoFaSubmitButton": "//*[@id='auth-pages']/div/div[contains(@class,'tabs-container') and contains(@class,'auth-pages__container')]/div[contains(@class,'tabs-tab') and contains(@class,'page-password') and contains(@class,'active')]/div/div[contains(@class,'input-wrapper')]/button/div",
+    "chatListIndicator": ".chatlist",
+    "waitBetweenSteps": { "min": 5000, "max": 10000 }
+  },
+  "selectors": {
+    "searchInput": ".search-input",
+    "chatInput": ".input-message-input",
+    "sendButton": ".btn-send",
+    "sidebarChatList": ".chatlist",
+    "unreadChat": ".chatlist-chat.is-unread",
+    "chatTitle": ".peer-title"
+  },
+  "conversation": {
+    "messageBlock": ".bubble",
+    "messageBody": ".bubble .message",
+    "messageAuthor": ".bubble .peer-title",
+    "messageTime": ".bubble .message-time",
+    "replyEditor": ".input-message-input",
+    "replySubmit": ".btn-send"
+  },
+  "delayMs": { "min": 15000, "max": 30000 },
+  "timeouts": {
+    "navigation": 60000,
+    "waitFor": 15000,
+    "closeBeforeStartMs": 2000,
+    "cdpReadyMs": 30000,
+    "cdpPollIntervalMs": 2000,
+    "postSubmitMs": 1000,
+    "closeProfileMs": 15000
+  },
+  "retry": {
+    "maxAttempts": 3,
+    "postClickPollMs": 8000,
+    "postClickPollIntervalMs": 500,
+    "networkRetryDelayMs": 3000
+  }
+}

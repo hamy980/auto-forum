@@ -12,7 +12,7 @@ config/forums/massagevua.net.json
 config/forums/clubvn.net.json
 config/forums/congdongthugian.com.json
 
-# Real platform configs
+# Real platform configs (actual API endpoints, not samples)
 config/platforms/telegram.json
 config/platforms/verification-api.json
 

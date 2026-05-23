@@ -3,20 +3,33 @@ import { forumsDir, platformsDir } from "./paths.js";
 import { readJson, sleep } from "./utils.js";
 
 export async function loadPlatformConfig(configId) {
+  // Try real config first, then sample
   const platformPath = path.join(platformsDir, `${configId}.json`);
   try {
     const config = await readJson(platformPath);
     if (config.platform) return config;
-  } catch { /* not a platform config, try forums */ }
+  } catch { /* not found, try sample */ }
+
+  const samplePath = path.join(platformsDir, `sample-${configId}.json`);
+  try {
+    const config = await readJson(samplePath);
+    if (config.platform) return config;
+  } catch { /* not found, try forums */ }
 
   const forumPath = path.join(forumsDir, `${configId}.json`);
   return readJson(forumPath);
 }
 
 export async function loadVerificationApiConfig() {
+  // Try real config first, then sample
   const filePath = path.join(platformsDir, "verification-api.json");
   try {
     return await readJson(filePath);
+  } catch { /* not found, try sample */ }
+
+  const samplePath = path.join(platformsDir, "sample-verification-api.json");
+  try {
+    return await readJson(samplePath);
   } catch {
     return {
       baseUrl: "http://127.0.0.1:5000",

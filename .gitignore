@@ -11,6 +11,8 @@ campaigns/
 config/forums/massagevua.net.json
 config/forums/clubvn.net.json
 config/forums/congdongthugian.com.json
+config/forums/forum4travel.com.json
+config/forums/thiendia.vip.json
 
 # Real platform configs (actual API endpoints, not samples)
 config/platforms/telegram.json

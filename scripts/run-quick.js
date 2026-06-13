@@ -263,6 +263,20 @@ async function main() {
     process.exit(1);
   }
 
+  const contentMode = unquote(
+    await ask(
+      rl,
+      '3b) Content mode: "pack" = keep contentPackPath (round-robin per sequence, use for direct ad PMs) | "flatten" = expand to titleTemplates/bodyTemplates (use for greeting/reply)',
+      "pack"
+    )
+  ).toLowerCase();
+  if (contentMode !== "pack" && contentMode !== "flatten") {
+    console.error(`[error] invalid content mode "${contentMode}". Use "pack" or "flatten".`);
+    rl.close();
+    process.exit(1);
+  }
+  console.log(`  -> mode: ${contentMode}\n`);
+
   const [allProfiles, groups] = await Promise.all([listProfiles(), listGroups()]);
   let profileIds = [];
   let scopedGroup = null;
@@ -347,10 +361,15 @@ async function main() {
     forumId: domain,
     profileIds,
     memberListPath: members.absolute,
-    titleTemplates: content.variants.map((v) => v.title),
-    bodyTemplates: content.variants.map((v) => v.body),
     errorThreshold: 3
   };
+  if (contentMode === "pack") {
+    const relPath = path.relative(campaignsDir, content.absolute).replace(/\\/g, "/");
+    campaign.contentPackPath = relPath.startsWith("..") ? content.absolute : relPath;
+  } else {
+    campaign.titleTemplates = content.variants.map((v) => v.title);
+    campaign.bodyTemplates = content.variants.map((v) => v.body);
+  }
 
   await ensureDir(campaignsDir);
   const outPath = path.join(campaignsDir, `${id}.json`);

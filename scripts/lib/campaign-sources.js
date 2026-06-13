@@ -30,6 +30,14 @@ export function buildCampaignContent({ campaign, contentPack, recipient, profile
     sequence
   };
 
+  if (Array.isArray(contentPack?.contents) && contentPack.contents.length > 0) {
+    const item = contentPack.contents[sequence % contentPack.contents.length];
+    return {
+      title: skipTitle ? null : resolveSpin(fillTemplate(item.title ?? "", context)),
+      body: resolveSpin(fillTemplate(item.body ?? "", context))
+    };
+  }
+
   const titleTemplates = contentPack?.titleTemplates ?? campaign.titleTemplates;
   const bodyTemplates = contentPack?.bodyTemplates ?? campaign.bodyTemplates;
   return {

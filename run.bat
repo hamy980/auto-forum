@@ -18,6 +18,7 @@ echo   7. Reply polling loop (runner-reply.js)
 echo   8. Follow-up check (followup-check.js)
 echo   9. Liet ke GPM profiles (gpm:list)
 echo   10. Xem ket qua campaign (check-results.js)
+echo   11. Watch campaign realtime (watch-campaign.js)
 echo.
 echo   0. Thoat
 echo.
@@ -33,6 +34,7 @@ if "%choice%"=="7" goto cmd_reply
 if "%choice%"=="8" goto cmd_followup
 if "%choice%"=="9" goto cmd_gpm
 if "%choice%"=="10" goto cmd_results
+if "%choice%"=="11" goto cmd_watch
 if "%choice%"=="0" exit /b
 echo Lua chon khong hop le.
 pause
@@ -152,4 +154,14 @@ echo.
 set /p campaign="Campaign ID: "
 node scripts/check-results.js --campaign %campaign%
 pause
+goto menu
+
+:cmd_watch
+echo.
+set /p campaign="Campaign ID de watch: "
+set /p interval="Interval giay (mac dinh 3): "
+if "%interval%"=="" set interval=3
+echo Watching... (Ctrl+C de thoat)
+echo.
+node scripts/watch-campaign.js %campaign% %interval%
 goto menu

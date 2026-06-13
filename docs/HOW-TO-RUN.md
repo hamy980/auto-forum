@@ -68,6 +68,32 @@ npm run gpm:list -- --profiles --search massagevua
 node scripts/check-results.js --campaign massagevua-greet --watch
 ```
 
+## Bước 5: Watch campaign realtime
+
+Vì CDP chạy ở background, browser không hiện UI. Dùng `watch-campaign.js` poll summary files mỗi N giây:
+
+```powershell
+node scripts/watch-campaign.js <campaign-id> [intervalSec]
+# vi du:
+node scripts/watch-campaign.js quick-20260613-193047 3
+```
+
+Output (mỗi tick):
+```
+=== quick-20260613-193047 @ 8:18:48 PM ===
+profile                               | sent | errs | lastStatus     | lastSeen
+--------------------------------------|------|------|----------------|--------
+36414da6-e10f-4d9b-b5b0-179e7085bb24 |    9 |    3 | sent           | 1s ago
+37f46b12-98a3-460a-9243-6cea26af3393 |    6 |    4 | sent           | 56s ago
+519de894-bf66-405b-b45e-d0ec87ca0476 |   13 |    5 | sent           | 1m16s ago
+54445eae-c380-4d2d-a140-464f29e8ffa5 |   19 |    1 | sent           | 32s ago
+edfc0483-bb5f-4590-aef3-b1a14ca5f318 |   13 |    6 | sent           | 19s ago
+--------------------------------------|------|------|----------------|--------
+TOTAL sent=60  errors=19  rate=29.7/min
+```
+
+Qua `run.bat` chọn **11**.
+
 ## Điều kiện cần trước khi chạy
 
 1. `config/forums/<forumId>.json` phải tồn tại (4 cái có sẵn: `sample-forum`, `massagevua.net`, `forum4travel.com`, `thiendia.vip`)

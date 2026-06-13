@@ -340,7 +340,7 @@ async function runTelegramProfile({ gpmClient, gpmConfig, platformConfig, campai
 
   // Navigate to Telegram first
   await page.goto(platformConfig.baseUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
-  await sleep(3000);
+  await sleep(timeouts.inboxSettleMs ?? 3000);
 
   // Login if needed
   const loggedIn = await isAlreadyLoggedIn(page, platformConfig);
@@ -402,9 +402,9 @@ async function runTelegramProfile({ gpmClient, gpmConfig, platformConfig, campai
         // Search for user and open chat
         const searchInput = page.locator(selectors.searchInput ?? ".search-input").first();
         await searchInput.click();
-        await sleep(500);
+        await sleep(timeouts.replyEditorClickMs ?? 500);
         await searchInput.fill(recipient);
-        await sleep(2000);
+        await sleep(timeouts.chatListWaitMs ?? 2000);
 
         const chatListSelector = selectors.sidebarChatList ?? ".chatlist";
         const chatTitleSelector = selectors.chatTitle ?? ".peer-title";
@@ -422,13 +422,13 @@ async function runTelegramProfile({ gpmClient, gpmConfig, platformConfig, campai
         }
 
         await searchResults.first().click();
-        await sleep(1500);
+        await sleep(timeouts.conversationSettleMs ?? 1500);
 
         // Type and send message
         const chatInput = page.locator(selectors.chatInput ?? ".input-message-input").first();
-        await chatInput.waitFor({ state: "visible", timeout: 10000 });
+        await chatInput.waitFor({ state: "visible", timeout: timeouts.waitFor ?? 10000 });
         await setLocatorValue(chatInput, content.body);
-        await sleep(500);
+        await sleep(timeouts.replyEditorClickMs ?? 500);
 
         const sendBtn = page.locator(selectors.sendButton ?? ".btn-send").first();
         try {
@@ -480,7 +480,7 @@ async function runTelegramProfile({ gpmClient, gpmConfig, platformConfig, campai
         // Clear search for next recipient
         await searchInput.click();
         await page.keyboard.press("Escape");
-        await sleep(500);
+        await sleep(timeouts.popupCloseMs ?? 500);
       } catch (err) {
         const elapsed = Date.now() - startMs;
         tracker.record("network_error", err.message);

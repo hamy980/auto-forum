@@ -4,17 +4,18 @@ export const checkInboxTask = {
   name: "forum:check-inbox",
   async run({ ctx, state }) {
     const inboxConfig = ctx.forumConfig.inbox ?? {};
+    const timeouts = ctx.forumConfig.timeouts ?? {};
     const context = state.browser.contexts()[0];
     const page = context.pages()[0] ?? await context.newPage();
 
     // Navigate to forum homepage
-    await page.goto(ctx.forumConfig.baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
-    await sleep(2000);
+    await page.goto(ctx.forumConfig.baseUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
+    await sleep(timeouts.inboxSettleMs ?? 2000);
 
     // Check unread badge first — skip popup if zero
     const triggerSelector = inboxConfig.popupTrigger ?? ".p-navgroup-link--conversations";
     const trigger = page.locator(triggerSelector).first();
-    await trigger.waitFor({ state: "visible", timeout: 15000 });
+    await trigger.waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
 
     const badgeAttr = inboxConfig.unreadBadgeAttr ?? "data-badge";
     const badgeValue = await trigger.getAttribute(badgeAttr).catch(() => "0");
@@ -34,7 +35,7 @@ export const checkInboxTask = {
 
     // Open popup and parse unread conversations
     await trigger.click();
-    await sleep(3000);
+    await sleep(timeouts.popupOpenMs ?? 3000);
 
     const rowSelector = inboxConfig.popupRowHighlighted ?? ".menu-row--highlighted";
     const rowCount = await page.locator(rowSelector).count();
@@ -64,7 +65,7 @@ export const checkInboxTask = {
 
     // Close popup
     await page.keyboard.press("Escape").catch(() => {});
-    await sleep(300);
+    await sleep(timeouts.popupCloseMs ?? 300);
 
     const latestUnread = conversations[0] ?? null;
 

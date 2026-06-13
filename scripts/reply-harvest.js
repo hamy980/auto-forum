@@ -36,23 +36,23 @@ async function readExistingMd(filePath) {
   }
 }
 
-async function checkBadge(page, forumConfig) {
+async function checkBadge(page, forumConfig, timeouts) {
   const inboxConfig = forumConfig.inbox ?? {};
   const triggerSelector = inboxConfig.popupTrigger ?? ".p-navgroup-link--conversations";
   const trigger = page.locator(triggerSelector).first();
-  await trigger.waitFor({ state: "visible", timeout: 15000 }).catch(() => {});
+  await trigger.waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 }).catch(() => {});
   const badgeAttr = inboxConfig.unreadBadgeAttr ?? "data-badge";
   const badgeValue = await trigger.getAttribute(badgeAttr).catch(() => "0");
   return Number(badgeValue) || 0;
 }
 
-async function openPopupAndGetConversations(page, forumConfig) {
+async function openPopupAndGetConversations(page, forumConfig, timeouts) {
   const inboxConfig = forumConfig.inbox ?? {};
   const triggerSelector = inboxConfig.popupTrigger ?? ".p-navgroup-link--conversations";
   const trigger = page.locator(triggerSelector).first();
 
   await trigger.click();
-  await sleep(3000);
+  await sleep(timeouts.popupOpenMs ?? 3000);
 
   const rowSelector = inboxConfig.popupRowHighlighted ?? ".menu-row--highlighted";
   const linkSelector = inboxConfig.popupConversationLink ?? ".fauxBlockLink-blockLink";
@@ -74,7 +74,7 @@ async function openPopupAndGetConversations(page, forumConfig) {
   rows.sort((a, b) => (b.dataTime ?? 0) - (a.dataTime ?? 0));
 
   await page.keyboard.press("Escape").catch(() => {});
-  await sleep(300);
+  await sleep(timeouts.popupCloseMs ?? 300);
 
   return rows;
 }
@@ -82,6 +82,7 @@ async function openPopupAndGetConversations(page, forumConfig) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const forumConfig = await loadForumConfig(args.forumId);
+  const timeouts = forumConfig.timeouts ?? {};
   const gpmConfig = await readJson(path.join(configDir, "gpm.json"));
   const gpmClient = new GpmClient(gpmConfig.baseUrl);
 
@@ -89,14 +90,14 @@ async function main() {
   const profileResponse = await gpmClient.getProfile(args.profileId);
   const profile = profileResponse.data;
   await gpmClient.closeProfile(args.profileId).catch(() => {});
-  await sleep(2000);
+  await sleep(timeouts.closeBeforeStartMs ?? 2000);
   const started = await gpmClient.startProfile(args.profileId, gpmConfig.startOptions ?? {});
   const debuggingAddress = started.data.remote_debugging_address;
   if (!debuggingAddress) {
     throw new Error(`No remote_debugging_address for profile ${args.profileId}`);
   }
   console.error(`[harvest] Waiting for browser at ${debuggingAddress}...`);
-  await gpmClient.waitForCdpReady(debuggingAddress, { timeoutMs: 30000, intervalMs: 2000 });
+  await gpmClient.waitForCdpReady(debuggingAddress, { timeoutMs: timeouts.cdpReadyMs ?? 30000, intervalMs: timeouts.cdpPollIntervalMs ?? 2000 });
   const browser = await chromium.connectOverCDP(`http://${debuggingAddress}`);
   const context = browser.contexts()[0];
   const page = context.pages()[0] ?? await context.newPage();
@@ -106,10 +107,10 @@ async function main() {
 
   try {
     console.error(`[harvest] Navigating to ${forumConfig.baseUrl}...`);
-    await page.goto(forumConfig.baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
-    await sleep(2000);
+    await page.goto(forumConfig.baseUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
+    await sleep(timeouts.inboxSettleMs ?? 2000);
 
-    const unreadCount = await checkBadge(page, forumConfig);
+    const unreadCount = await checkBadge(page, forumConfig, timeouts);
     if (unreadCount === 0) {
       const result = { unread: 0, conversations: [] };
       console.log(JSON.stringify(result, null, 2));
@@ -119,7 +120,7 @@ async function main() {
     }
 
     console.error(`[harvest] ${unreadCount} unread conversation(s). Opening popup...`);
-    const conversations = await openPopupAndGetConversations(page, forumConfig);
+    const conversations = await openPopupAndGetConversations(page, forumConfig, timeouts);
 
     if (conversations.length === 0) {
       const result = { unread: unreadCount, conversations: [] };
@@ -156,8 +157,8 @@ async function main() {
       }
 
       console.error(`[harvest] Reading "${conv.title}" at ${conversationUrl}...`);
-      await page.goto(conversationUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
-      await sleep(1500);
+      await page.goto(conversationUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 30000 });
+      await sleep(timeouts.conversationSettleMs ?? 1500);
 
       const messages = await readConversationMessages(page, forumConfig);
       const lastMsg = messages[messages.length - 1];
@@ -192,7 +193,7 @@ async function main() {
 
     console.log(JSON.stringify(result, null, 2));
   } finally {
-    await sleep(15000);
+    await sleep(timeouts.closeProfileMs ?? 15000);
     await browser.close().catch(() => {});
     await gpmClient.closeProfile(args.profileId).catch(() => {});
     console.error(`[harvest] Profile stopped`);

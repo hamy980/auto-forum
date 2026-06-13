@@ -123,12 +123,13 @@ async function resolveSubmitOutcome(page, forumConfig, composeUrl, events) {
 export const submitPmTask = {
   name: "forum:submit-pm",
   async run({ ctx, state }) {
+    const timeouts = ctx.forumConfig.timeouts ?? {};
     const events = await collectNetworkDuring(
       state.page,
       async () => {
         await state.page.locator(ctx.forumConfig.selectors.submit).nth(ctx.forumConfig.submitIndex ?? 0).click();
-        await state.page.waitForLoadState("domcontentloaded", { timeout: 15000 }).catch(() => {});
-        await sleep(750);
+        await state.page.waitForLoadState("domcontentloaded", { timeout: timeouts.waitFor ?? 15000 }).catch(() => {});
+        await sleep(timeouts.postSubmitMs ?? 750);
       },
       (url, resourceType) =>
         url.includes(new URL(ctx.forumConfig.baseUrl).host) &&

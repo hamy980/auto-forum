@@ -100,6 +100,7 @@ async function readExistingConversations(forumId) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const forumConfig = await loadForumConfig(args.forumId);
+  const timeouts = forumConfig.timeouts ?? {};
   const gpmConfig = await readJson(path.join(configDir, "gpm.json"));
   const gpmClient = new GpmClient(gpmConfig.baseUrl);
 
@@ -208,28 +209,28 @@ async function main() {
   const profileResponse = await gpmClient.getProfile(args.profileId);
   const profile = profileResponse.data;
   await gpmClient.closeProfile(args.profileId).catch(() => {});
-  await sleep(2000);
+  await sleep(timeouts.closeBeforeStartMs ?? 2000);
   const started = await gpmClient.startProfile(args.profileId, gpmConfig.startOptions ?? {});
   const debuggingAddress = started.data.remote_debugging_address;
   if (!debuggingAddress) {
     throw new Error(`No remote_debugging_address for profile ${args.profileId}`);
   }
   console.error(`[followup] Waiting for browser at ${debuggingAddress}...`);
-  await gpmClient.waitForCdpReady(debuggingAddress, { timeoutMs: 30000, intervalMs: 2000 });
+  await gpmClient.waitForCdpReady(debuggingAddress, { timeoutMs: timeouts.cdpReadyMs ?? 30000, intervalMs: timeouts.cdpPollIntervalMs ?? 2000 });
   const browser = await chromium.connectOverCDP(`http://${debuggingAddress}`);
   const context = browser.contexts()[0];
   const page = context.pages()[0] ?? await context.newPage();
 
   try {
-    await page.goto(forumConfig.baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
-    await sleep(2000);
+    await page.goto(forumConfig.baseUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
+    await sleep(timeouts.inboxSettleMs ?? 2000);
 
     for (const conv of staleConversations) {
       console.error(`[followup] Checking "${conv.member}" (sent ${conv.daysAgo} days ago, status: ${conv.currentStatus})...`);
 
       try {
-        await page.goto(conv.url, { waitUntil: "domcontentloaded", timeout: 30000 });
-        await sleep(1500);
+        await page.goto(conv.url, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 30000 });
+        await sleep(timeouts.conversationSettleMs ?? 1500);
 
         const messages = await readConversationMessages(page, forumConfig);
         const lastMsg = messages[messages.length - 1];
@@ -293,7 +294,7 @@ async function main() {
 
     console.log(JSON.stringify(result, null, 2));
   } finally {
-    await sleep(15000);
+    await sleep(timeouts.closeProfileMs ?? 15000);
     await browser.close().catch(() => {});
     await gpmClient.closeProfile(args.profileId).catch(() => {});
     console.error(`[followup] Profile stopped`);

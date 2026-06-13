@@ -5,6 +5,7 @@ export const sendMessageTask = {
   name: "telegram:send-message",
   async run({ ctx, state }) {
     const config = ctx.platformConfig;
+    const timeouts = config.timeouts ?? {};
     const page = state.page;
     const messageBody = state.currentContent?.body;
     const selectors = config.selectors ?? {};
@@ -16,7 +17,7 @@ export const sendMessageTask = {
     // Type message into chat input
     const chatInput = page.locator(selectors.chatInput ?? ".input-message-input").first();
     await setLocatorValue(chatInput, messageBody);
-    await sleep(500);
+    await sleep(timeouts.replyEditorClickMs ?? 500);
 
     // Click send button
     const sendBtn = page.locator(selectors.sendButton ?? ".btn-send").first();

@@ -5,6 +5,7 @@ export const sendTelegramReplyTask = {
   name: "telegram:send-reply",
   async run({ ctx, state }) {
     const config = ctx.platformConfig;
+    const timeouts = config.timeouts ?? {};
     const page = state.page;
     const replyText = state.replyText;
     const convConfig = config.conversation ?? {};
@@ -17,9 +18,9 @@ export const sendTelegramReplyTask = {
     const submitSelector = convConfig.replySubmit ?? ".btn-send";
 
     const editor = page.locator(editorSelector).first();
-    await editor.waitFor({ state: "visible", timeout: 10000 });
+    await editor.waitFor({ state: "visible", timeout: timeouts.waitFor ?? 10000 });
     await setLocatorValue(editor, replyText);
-    await sleep(500);
+    await sleep(timeouts.replyEditorClickMs ?? 500);
 
     // Send via button or Enter
     try {

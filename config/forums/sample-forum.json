@@ -36,9 +36,17 @@
     "replyEditor": ".fr-element[contenteditable='true']",
     "replySubmit": "button.button--icon--reply"
   },
+  "fallbackReplies": {
+    "fromOther": "Cảm ơn {first_name} đã phản hồi! Mình sẽ cập nhật thêm sớm nhé.",
+    "fromSelf": "Cảm ơn bạn đã liên hệ! Mình sẽ phản hồi sớm nhé."
+  },
   "delayMs": {
     "min": 60000,
     "max": 70000
+  },
+  "replyDelayMs": {
+    "min": 4000,
+    "max": 8000
   },
   "timeouts": {
     "navigation": 60000,
@@ -47,7 +55,15 @@
     "cdpReadyMs": 30000,
     "cdpPollIntervalMs": 2000,
     "postSubmitMs": 1000,
-    "closeProfileMs": 15000
+    "closeProfileMs": 15000,
+    "popupOpenMs": 3000,
+    "popupCloseMs": 300,
+    "inboxSettleMs": 2000,
+    "conversationSettleMs": 1500,
+    "postReplyMinMs": 4000,
+    "postReplyMaxMs": 8000,
+    "replyEditorClickMs": 500,
+    "chatListWaitMs": 1500
   },
   "retry": {
     "maxAttempts": 3,

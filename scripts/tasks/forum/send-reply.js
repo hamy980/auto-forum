@@ -9,24 +9,25 @@ export const sendReplyTask = {
     }
 
     const convConfig = ctx.forumConfig.conversation ?? {};
+    const timeouts = ctx.forumConfig.timeouts ?? {};
     const context = state.browser.contexts()[0];
     const page = context.pages()[0] ?? await context.newPage();
-    await page.goto(state.lastConversationUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
-    await sleep(1000);
+    await page.goto(state.lastConversationUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
+    await sleep(timeouts.conversationSettleMs ?? 1000);
 
     const replyEditorSelector = convConfig.replyEditor ?? ".fr-element[contenteditable='true']";
     const replySubmitSelector = convConfig.replySubmit ?? "button.button--icon--reply";
 
     const replyEditor = page.locator(replyEditorSelector).first();
-    await replyEditor.waitFor({ state: "visible", timeout: 15000 });
+    await replyEditor.waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
     await setLocatorValue(replyEditor, state.replyBody ?? state.currentBody ?? "");
 
-    await sleep(300);
+    await sleep(timeouts.replyEditorClickMs ?? 300);
 
     const submitBtn = page.locator(replySubmitSelector).first();
     await submitBtn.click();
-    await page.waitForLoadState("domcontentloaded", { timeout: 15000 }).catch(() => {});
-    await sleep(1000);
+    await page.waitForLoadState("domcontentloaded", { timeout: timeouts.waitFor ?? 15000 }).catch(() => {});
+    await sleep(timeouts.postSubmitMs ?? 1000);
 
     const validationSelectors = ctx.forumConfig.validationErrorSelectors ?? [];
     let validationError = null;

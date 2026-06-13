@@ -166,13 +166,14 @@ async function sendPmViaProfile({
   title,
   body
 }) {
+  const timeouts = forumConfig.timeouts ?? {};
   const context = browser.contexts()[0];
   const page = context.pages()[0] ?? await context.newPage();
   const composeUrl = buildComposeUrl(forumConfig, recipient);
 
-  await page.goto(composeUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await page.locator(forumConfig.selectors.title).first().waitFor({ state: "visible", timeout: 15000 });
-  await page.locator(forumConfig.selectors.body).first().waitFor({ state: "visible", timeout: 15000 });
+  await page.goto(composeUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
+  await page.locator(forumConfig.selectors.title).first().waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
+  await page.locator(forumConfig.selectors.body).first().waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
 
   await setLocatorValue(page.locator(forumConfig.selectors.title).first(), title);
   await setLocatorValue(page.locator(forumConfig.selectors.body).first(), body);
@@ -189,8 +190,8 @@ async function sendPmViaProfile({
       page,
       async () => {
         await page.locator(forumConfig.selectors.submit).nth(forumConfig.submitIndex ?? 0).click();
-        await page.waitForLoadState("domcontentloaded", { timeout: 15000 }).catch(() => {});
-        await sleep(1000);
+        await page.waitForLoadState("domcontentloaded", { timeout: timeouts.waitFor ?? 15000 }).catch(() => {});
+        await sleep(timeouts.postSubmitMs ?? 1000);
       },
       (url, resourceType) =>
         url.includes(new URL(forumConfig.baseUrl).host) &&

@@ -5,17 +5,18 @@ export const openUnreadConversationTask = {
   async run({ ctx, state }) {
     const targetTitle = state.targetConversationTitle;
     const inboxConfig = ctx.forumConfig.inbox ?? {};
+    const timeouts = ctx.forumConfig.timeouts ?? {};
     const context = state.browser.contexts()[0];
     const page = context.pages()[0] ?? await context.newPage();
 
     // Navigate to forum homepage
-    await page.goto(ctx.forumConfig.baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
-    await sleep(2000);
+    await page.goto(ctx.forumConfig.baseUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
+    await sleep(timeouts.inboxSettleMs ?? 2000);
 
     // Check unread badge
     const triggerSelector = inboxConfig.popupTrigger ?? ".p-navgroup-link--conversations";
     const trigger = page.locator(triggerSelector).first();
-    await trigger.waitFor({ state: "visible", timeout: 15000 });
+    await trigger.waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
 
     const badgeAttr = inboxConfig.unreadBadgeAttr ?? "data-badge";
     const badgeValue = await trigger.getAttribute(badgeAttr).catch(() => "0");
@@ -27,7 +28,7 @@ export const openUnreadConversationTask = {
 
     // Open popup
     await trigger.click();
-    await sleep(3000);
+    await sleep(timeouts.popupOpenMs ?? 3000);
 
     // Parse highlighted rows
     const rowSelector = inboxConfig.popupRowHighlighted ?? ".menu-row--highlighted";
@@ -70,11 +71,11 @@ export const openUnreadConversationTask = {
 
     // Navigate directly to the conversation URL (more reliable than clicking popup overlay)
     await page.keyboard.press("Escape").catch(() => {});
-    await sleep(300);
+    await sleep(timeouts.popupCloseMs ?? 300);
 
     const conversationUrl = targetRow.url.replace("/unread", "");
-    await page.goto(conversationUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
-    await sleep(1500);
+    await page.goto(conversationUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 30000 });
+    await sleep(timeouts.conversationSettleMs ?? 1500);
 
     return {
       ...state,

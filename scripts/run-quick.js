@@ -52,39 +52,25 @@ async function loadContent(contentPath) {
   const ext = path.extname(absolute).toLowerCase();
   if (ext === ".json") {
     const data = JSON.parse(await fs.readFile(absolute, "utf8"));
-    if (!Array.isArray(data.titleTemplates) || !Array.isArray(data.bodyTemplates)) {
-      throw new Error("Content JSON must have titleTemplates[] and bodyTemplates[]");
+    const variants = Array.isArray(data.contents) ? data.contents : null;
+    if (!variants) {
+      throw new Error('Content JSON must have a "contents" array of {title, body} objects');
     }
-    if (data.titleTemplates.length === 0 || data.bodyTemplates.length === 0) {
-      throw new Error("Content JSON titleTemplates/bodyTemplates cannot be empty");
+    const normalized = variants
+      .map((v, i) => {
+        if (typeof v.title !== "string" || typeof v.body !== "string") {
+          throw new Error(`contents[${i}].title and contents[${i}].body must be strings`);
+        }
+        if (!v.title.trim() || !v.body.trim()) return null;
+        return { title: v.title, body: v.body };
+      })
+      .filter(Boolean);
+    if (normalized.length === 0) {
+      throw new Error('Content JSON "contents" array has no valid {title, body} entries');
     }
-    return { mode: "json", absolute, data };
+    return { mode: "json", absolute, variants: normalized };
   }
-  if (ext === ".txt" || ext === ".md") {
-    const lines = (await fs.readFile(absolute, "utf8"))
-      .split(/\r?\n/)
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .filter((l) => !l.startsWith("#"));
-    if (lines.length === 0) {
-      throw new Error(`Content text file ${contentPath} has no usable lines`);
-    }
-    return { mode: "text", absolute, lines };
-  }
-  throw new Error(`Unsupported content extension: ${ext}. Use .json or .txt`);
-}
-
-function buildTemplates(content) {
-  if (content.mode === "json") {
-    return {
-      titleTemplates: content.data.titleTemplates,
-      bodyTemplates: content.data.bodyTemplates
-    };
-  }
-  return {
-    titleTemplates: ["Chào {first_name}!"],
-    bodyTemplates: content.lines
-  };
+  throw new Error(`Unsupported content extension: ${ext}. Use .json`);
 }
 
 async function listForumIds() {
@@ -141,11 +127,11 @@ async function main() {
     process.exit(1);
   }
 
-  const contentPath = await ask(rl, "Content file path (.json with titleTemplates+bodyTemplates, or .txt with one body per line)");
+  const contentPath = await ask(rl, "Content file path (.json with contents[{title, body}])");
   let content;
   try {
     content = await loadContent(contentPath);
-    console.log(`  -> content OK (${content.mode} mode)\n`);
+    console.log(`  -> content OK (${content.variants.length} variant(s))\n`);
   } catch (err) {
     console.error(`[error] ${err.message}`);
     rl.close();
@@ -171,7 +157,6 @@ async function main() {
   }
 
   const id = `quick-${tsId()}`;
-  const templates = buildTemplates(content);
   const campaign = {
     id,
     forumId,
@@ -179,7 +164,8 @@ async function main() {
     memberListPath: members.absolute.includes(dataDir)
       ? path.relative(path.dirname(campaignsDir), members.absolute).replace(/\\/g, "/")
       : memberPath,
-    ...templates,
+    titleTemplates: content.variants.map((v) => v.title),
+    bodyTemplates: content.variants.map((v) => v.body),
     errorThreshold: 3
   };
 

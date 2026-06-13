@@ -18,11 +18,13 @@ export async function loadMembersFromSource(memberSourcePath) {
     .filter((line) => !line.startsWith("#"));
 }
 
-export function buildCampaignContent({ campaign, contentPack, recipient, profile, sequence, skipTitle = false }) {
+export function buildCampaignContent({ campaign, contentPack, recipient, profile, sequence, forumDomain, skipTitle = false }) {
   const context = {
     campaign_id: campaign.id,
+    member_name: recipient,
     recipient_name: recipient,
     first_name: parseFirstName(recipient),
+    domain: forumDomain ?? "",
     profile_id: profile.id,
     profile_name: profile.name,
     sequence

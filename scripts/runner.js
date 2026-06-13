@@ -207,7 +207,8 @@ async function runProfile({ gpmClient, gpmConfig, forumConfig, campaign, profile
         contentPack: campaign.contentPackPath ? await loadContentPack(campaign.contentPackPath) : null,
         recipient,
         profile,
-        sequence
+        sequence,
+        forumDomain: new URL(forumConfig.baseUrl).host
       });
 
       console.log(`[${profileId}][#${sequence}] Sending to ${recipient}...`);
@@ -391,6 +392,7 @@ async function runTelegramProfile({ gpmClient, gpmConfig, platformConfig, campai
         campaign,
         contentPack: campaign.contentPackPath ? await loadContentPack(campaign.contentPackPath) : null,
         recipient, profile, sequence,
+        forumDomain: new URL(platformConfig.baseUrl).host,
         skipTitle: true
       });
 

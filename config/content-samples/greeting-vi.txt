@@ -1,5 +1,0 @@
-Chào {first_name}! Mình là thành viên mới trên diễn đàn, thấy bạn khá active nên muốn làm quen. Có gì thú vị thì chia sẻ với mình nhé! 😊
-Hey {first_name}! Mình mới tham gia diễn đàn, đang muốn kết bạn với các thành viên lâu năm. Bạn có tips gì hay cho newbie không? Cùng giao lưu nào! 😄
-Xin chào {first_name} 👋 Mình thấy bạn hoạt động nhiều ở đây nên muốn chào hỏi. Hy vọng mình có thể giao lưu và học hỏi từ bạn nhé!
-Hi {first_name}, mình cũng mới vào diễn đàn được ít hôm. Thấy bạn đăng bài hay nên muốn làm quen. Sau này có gì cùng nhau trao đổi nhé! 🙌
-Chào {first_name}! Mình đang tìm hiểu về diễn đàn, thấy bạn là người chơi lâu năm. Bạn rảnh có thể chia sẻ chút kinh nghiệm cho mình không? Cảm ơn bạn nhiều! 🙏

@@ -8,6 +8,14 @@ import { ensureDir, resolveMaybeRelative } from "./lib/utils.js";
 
 const cwd = process.cwd();
 
+function unquote(s) {
+  s = s.trim();
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    return s.slice(1, -1);
+  }
+  return s;
+}
+
 function tsId() {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
@@ -21,6 +29,7 @@ async function ask(rl, label, defaultValue = "") {
 }
 
 async function validateMembers(memberPath) {
+  memberPath = unquote(memberPath);
   const absolute = resolveMaybeRelative(cwd, memberPath);
   const raw = await fs.readFile(absolute, "utf8");
   const lines = raw
@@ -44,6 +53,7 @@ async function validateForum(forumId) {
 }
 
 async function loadContent(contentPath) {
+  contentPath = unquote(contentPath);
   const absolute = resolveMaybeRelative(cwd, contentPath);
   const stat = await fs.stat(absolute);
   if (!stat.isFile()) {

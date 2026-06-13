@@ -49,7 +49,7 @@ async function validateForum(forumId) {
   if (!exists) {
     throw new Error(`Forum config not found: ${configPath}`);
   }
-  return configPath;
+  return JSON.parse(await fs.readFile(configPath, "utf8"));
 }
 
 async function loadContent(contentPath) {
@@ -135,9 +135,23 @@ async function main() {
   const rl = readline.createInterface({ input, output });
 
   console.log("=== Quick Campaign Wizard ===\n");
-  console.log("(Ban co the nhap relative path nhu 'data/members/x.txt' hoac absolute path Windows nhu 'C:\\\\path\\\\to\\\\file.txt')\n");
+  console.log("(Paths: relative OK; absolute Windows paths also accepted. Domain is matched against config/forums/<domain>.json and GPM group names.)\n");
 
-  const memberPath = await ask(rl, "Member list file path (e.g. data/members/massagevua-test.txt)");
+  // 1. Domain (forum)
+  const forumIds = await listForumIds();
+  const domain = unquote(await ask(rl, `1) Domain (forum) (available: ${forumIds.join(", ")})`));
+  let forumConfig;
+  try {
+    forumConfig = await validateForum(domain);
+    console.log(`  -> forum config OK (baseUrl: ${forumConfig.baseUrl})\n`);
+  } catch (err) {
+    console.error(`[error] ${err.message}`);
+    rl.close();
+    process.exit(1);
+  }
+
+  // 2. Member list
+  const memberPath = await ask(rl, "2) Member list file path (e.g. data/members/massagevua-test.txt)");
   let members;
   try {
     members = await validateMembers(memberPath);
@@ -148,18 +162,8 @@ async function main() {
     process.exit(1);
   }
 
-  const forumIds = await listForumIds();
-  const forumId = await ask(rl, `Forum ID (available: ${forumIds.join(", ")})`);
-  try {
-    await validateForum(forumId);
-    console.log(`  -> forum config OK\n`);
-  } catch (err) {
-    console.error(`[error] ${err.message}`);
-    rl.close();
-    process.exit(1);
-  }
-
-  const contentPath = await ask(rl, "Content file path (.json with contents[{title, body}])  (absolute path OK)");
+  // 3. Content
+  const contentPath = await ask(rl, "3) Content file path (.json with contents[{title, body}])");
   let content;
   try {
     content = await loadContent(contentPath);
@@ -175,12 +179,12 @@ async function main() {
   let scopedGroup = null;
   let candidates = allProfiles;
   if (allProfiles.length > 0 && groups.length > 0) {
-    scopedGroup = findMatchingGroup(groups, forumId);
+    scopedGroup = findMatchingGroup(groups, domain);
     if (scopedGroup) {
       candidates = await listProfiles({ groupId: scopedGroup.id });
       console.log(`  -> GPM group matched: "${scopedGroup.name}" (id=${scopedGroup.id}); ${candidates.length}/${allProfiles.length} profile(s) in this group`);
     } else {
-      console.log(`  -> Warning: no GPM group matches forum "${forumId}". Will use all ${allProfiles.length} profile(s).`);
+      console.log(`  -> Warning: no GPM group matches domain "${domain}". Will use all ${allProfiles.length} profile(s).`);
     }
     if (candidates.length === 0) {
       console.log("  -> No candidates available; profileIds will be empty.\n");
@@ -222,7 +226,7 @@ async function main() {
   const id = `quick-${tsId()}`;
   const campaign = {
     id,
-    forumId,
+    forumId: domain,
     profileIds,
     memberListPath: members.absolute,
     titleTemplates: content.variants.map((v) => v.title),

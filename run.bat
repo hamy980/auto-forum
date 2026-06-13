@@ -47,7 +47,7 @@ goto menu
 
 :cmd_wizard
 echo.
-echo [2] Wizard campaign (se hoi 3 input: members, forum, content)
+echo [2] Wizard campaign (se hoi: 1) domain  2) members  3) content  4) profiles)
 echo.
 node scripts/run-quick.js
 pause

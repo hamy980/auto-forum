@@ -20,10 +20,10 @@ node scripts/run-quick.js
 
 Hỏi lần lượt:
 
-1. Member file path (vd: `data/members/massagevua-test.txt`)
-2. Forum ID (tự list: `forum4travel.com`, `massagevua.net`, `thiendia.vip`, `sample-forum`)
-3. Content file (`.json` với `titleTemplates`+`bodyTemplates`, hoặc `.txt` mỗi dòng 1 body)
-4. Profile IDs (Enter = auto-fetch từ GPM)
+1. **Domain** (forum): `massagevua.net`, `forum4travel.com`, `thiendia.vip`, `sample-forum` — load `config/forums/<domain>.json` + match GPM group
+2. **Member list file path**: relative (`data/members/x.txt`) hoặc absolute Windows (`C:\...\x.txt`)
+3. **Content file path**: `.json` với `contents: [{title, body}, ...]` (mỗi recipient pick 1 variant)
+4. **Profile selection** (scoped tới GPM group match domain): `Enter` = tất cả trong group, `N` = N đầu, hoặc comma-separated UUIDs/names
 5. Confirm → tạo `campaigns/quick-<timestamp>.json` + chạy `runner.js`
 
 ### Cách B — Campaign có sẵn

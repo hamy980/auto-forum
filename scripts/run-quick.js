@@ -88,9 +88,11 @@ async function listForumIds() {
   return files.filter((f) => f.endsWith(".json")).map((f) => f.replace(/\.json$/, ""));
 }
 
-async function listProfiles() {
+async function listProfiles({ groupId = null } = {}) {
   try {
-    const res = await fetch("http://127.0.0.1:19995/api/v3/profiles?per_page=100");
+    const params = new URLSearchParams({ per_page: "100" });
+    if (groupId) params.set("group_id", String(groupId));
+    const res = await fetch(`http://127.0.0.1:19995/api/v3/profiles?${params}`);
     const payload = await res.json();
     if (!payload.success) return [];
     return payload.data.map((p) => ({ id: p.id, name: p.name, group_id: p.group_id }));
@@ -168,18 +170,18 @@ async function main() {
     process.exit(1);
   }
 
-  const [profiles, groups] = await Promise.all([listProfiles(), listGroups()]);
+  const [allProfiles, groups] = await Promise.all([listProfiles(), listGroups()]);
   let profileIds = [];
   let scopedGroup = null;
-  if (profiles.length > 0 && groups.length > 0) {
+  let candidates = allProfiles;
+  if (allProfiles.length > 0 && groups.length > 0) {
     scopedGroup = findMatchingGroup(groups, forumId);
     if (scopedGroup) {
-      const inGroup = profiles.filter((p) => p.group_id === scopedGroup.id);
-      console.log(`  -> GPM group matched: "${scopedGroup.name}" (id=${scopedGroup.id}); ${inGroup.length}/${profiles.length} profile(s) in this group`);
+      candidates = await listProfiles({ groupId: scopedGroup.id });
+      console.log(`  -> GPM group matched: "${scopedGroup.name}" (id=${scopedGroup.id}); ${candidates.length}/${allProfiles.length} profile(s) in this group`);
     } else {
-      console.log(`  -> Warning: no GPM group matches forum "${forumId}". Will use all ${profiles.length} profile(s).`);
+      console.log(`  -> Warning: no GPM group matches forum "${forumId}". Will use all ${allProfiles.length} profile(s).`);
     }
-    const candidates = scopedGroup ? profiles.filter((p) => p.group_id === scopedGroup.id) : profiles;
     if (candidates.length === 0) {
       console.log("  -> No candidates available; profileIds will be empty.\n");
     } else {

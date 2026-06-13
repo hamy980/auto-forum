@@ -154,13 +154,25 @@ async function main() {
   if (profiles.length > 0) {
     const profileInput = await ask(
       rl,
-      `Profile IDs comma-separated (enter = all ${profiles.length} profiles)`,
+      `Profile IDs comma-separated (enter or "all" = use all ${profiles.length} profiles)`,
       ""
     );
-    if (profileInput) {
-      profileIds = profileInput.split(",").map((s) => s.trim()).filter(Boolean);
-    } else {
+    const normalized = profileInput.trim().toLowerCase();
+    if (!normalized || normalized === "all" || normalized === "*") {
       profileIds = profiles.map((p) => p.id);
+    } else {
+      const requested = profileInput.split(",").map((s) => s.trim()).filter(Boolean);
+      const knownIds = new Set(profiles.map((p) => p.id));
+      const knownNames = new Map(profiles.map((p) => [p.name.toLowerCase(), p.id]));
+      profileIds = requested.map((r) => {
+        if (knownIds.has(r)) return r;
+        if (knownNames.has(r.toLowerCase())) return knownNames.get(r.toLowerCase());
+        return r;
+      });
+      const unknown = requested.filter((r) => !knownIds.has(r) && !knownNames.has(r.toLowerCase()));
+      if (unknown.length > 0) {
+        console.log(`  -> Warning: ${unknown.length} profile(s) not found in GPM: ${unknown.join(", ")}`);
+      }
     }
     console.log(`  -> ${profileIds.length} profile(s) selected\n`);
   } else {

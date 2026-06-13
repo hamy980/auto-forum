@@ -93,10 +93,29 @@ async function listProfiles() {
     const res = await fetch("http://127.0.0.1:19995/api/v3/profiles?per_page=100");
     const payload = await res.json();
     if (!payload.success) return [];
-    return payload.data.map((p) => ({ id: p.id, name: p.name }));
+    return payload.data.map((p) => ({ id: p.id, name: p.name, group_id: p.group_id }));
   } catch {
     return [];
   }
+}
+
+async function listGroups() {
+  try {
+    const res = await fetch("http://127.0.0.1:19995/api/v3/groups");
+    const payload = await res.json();
+    if (!payload.success) return [];
+    return payload.data.map((g) => ({ id: g.id, name: g.name }));
+  } catch {
+    return [];
+  }
+}
+
+function findMatchingGroup(groups, forumId) {
+  const lower = forumId.toLowerCase();
+  const exact = groups.find((g) => g.name.toLowerCase() === lower);
+  if (exact) return exact;
+  const contains = groups.find((g) => lower.includes(g.name.toLowerCase()) || g.name.toLowerCase().includes(lower));
+  return contains ?? null;
 }
 
 function runRunner(campaignId, profileIds) {
@@ -149,39 +168,51 @@ async function main() {
     process.exit(1);
   }
 
-  const profiles = await listProfiles();
+  const [profiles, groups] = await Promise.all([listProfiles(), listGroups()]);
   let profileIds = [];
-  if (profiles.length > 0) {
-    console.log(`  -> GPM has ${profiles.length} profile(s) available`);
-    const profileInput = await ask(
-      rl,
-      "Profile selection (Enter=all profiles, 'N'=first N profiles, or comma-separated UUIDs/names)",
-      ""
-    );
-    const normalized = profileInput.trim().toLowerCase();
-    if (!normalized || normalized === "all" || normalized === "*") {
-      profileIds = profiles.map((p) => p.id);
-      console.log(`  -> Using all ${profileIds.length} profile(s) (round-robin across campaign)`);
-    } else if (/^\d+$/.test(normalized)) {
-      const n = Math.min(Number(normalized), profiles.length);
-      profileIds = profiles.slice(0, n).map((p) => p.id);
-      console.log(`  -> Using first ${profileIds.length} profile(s) (round-robin across campaign)`);
+  let scopedGroup = null;
+  if (profiles.length > 0 && groups.length > 0) {
+    scopedGroup = findMatchingGroup(groups, forumId);
+    if (scopedGroup) {
+      const inGroup = profiles.filter((p) => p.group_id === scopedGroup.id);
+      console.log(`  -> GPM group matched: "${scopedGroup.name}" (id=${scopedGroup.id}); ${inGroup.length}/${profiles.length} profile(s) in this group`);
     } else {
-      const requested = profileInput.split(",").map((s) => s.trim()).filter(Boolean);
-      const knownIds = new Set(profiles.map((p) => p.id));
-      const knownNames = new Map(profiles.map((p) => [p.name.toLowerCase(), p.id]));
-      profileIds = requested.map((r) => {
-        if (knownIds.has(r)) return r;
-        if (knownNames.has(r.toLowerCase())) return knownNames.get(r.toLowerCase());
-        return r;
-      });
-      const unknown = requested.filter((r) => !knownIds.has(r) && !knownNames.has(r.toLowerCase()));
-      if (unknown.length > 0) {
-        console.log(`  -> Warning: ${unknown.length} profile(s) not found in GPM: ${unknown.join(", ")}`);
-      }
-      console.log(`  -> Selected ${profileIds.length} profile(s)`);
+      console.log(`  -> Warning: no GPM group matches forum "${forumId}". Will use all ${profiles.length} profile(s).`);
     }
-    console.log();
+    const candidates = scopedGroup ? profiles.filter((p) => p.group_id === scopedGroup.id) : profiles;
+    if (candidates.length === 0) {
+      console.log("  -> No candidates available; profileIds will be empty.\n");
+    } else {
+      const profileInput = await ask(
+        rl,
+        `Profile selection (Enter=all ${candidates.length}, 'N'=first N, or comma-separated UUIDs/names)`,
+        ""
+      );
+      const normalized = profileInput.trim().toLowerCase();
+      if (!normalized || normalized === "all" || normalized === "*") {
+        profileIds = candidates.map((p) => p.id);
+        console.log(`  -> Using all ${profileIds.length} profile(s) in group "${scopedGroup?.name ?? "(unscoped)"}"`);
+      } else if (/^\d+$/.test(normalized)) {
+        const n = Math.min(Number(normalized), candidates.length);
+        profileIds = candidates.slice(0, n).map((p) => p.id);
+        console.log(`  -> Using first ${profileIds.length} profile(s) in group`);
+      } else {
+        const requested = profileInput.split(",").map((s) => s.trim()).filter(Boolean);
+        const knownIds = new Set(candidates.map((p) => p.id));
+        const knownNames = new Map(candidates.map((p) => [p.name.toLowerCase(), p.id]));
+        profileIds = requested.map((r) => {
+          if (knownIds.has(r)) return r;
+          if (knownNames.has(r.toLowerCase())) return knownNames.get(r.toLowerCase());
+          return r;
+        });
+        const unknown = requested.filter((r) => !knownIds.has(r) && !knownNames.has(r.toLowerCase()));
+        if (unknown.length > 0) {
+          console.log(`  -> Warning: ${unknown.length} profile(s) not found in group: ${unknown.join(", ")}`);
+        }
+        console.log(`  -> Selected ${profileIds.length} profile(s)`);
+      }
+      console.log();
+    }
   } else {
     console.log("  -> GPM not reachable; profileIds will be empty (set later or pass --profiles)\n");
   }

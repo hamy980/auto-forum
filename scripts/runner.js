@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { loadCampaign, loadForumConfig, loadMemberList } from "./lib/forum-config.js";
+import { loadCampaign, loadForumConfig, loadMemberList, updateForumDelayRule } from "./lib/forum-config.js";
 import { loadPlatformConfig, loadVerificationApiConfig } from "./lib/platform-config.js";
 import { loadContentPack, buildCampaignContent } from "./lib/campaign-sources.js";
 import { configDir, dataDir, projectRoot, runtimeDir } from "./lib/paths.js";
@@ -119,6 +119,15 @@ async function submitWithRetry({ page, forumConfig, composeUrl, title, body, max
       }
 
       if (outcome.status === "cooldown") {
+        const autoUpdate = forumConfig.autoUpdateTimerule !== false;
+        if (outcome.retryAfterMs && autoUpdate) {
+          try {
+            const newDelay = await updateForumDelayRule(forumConfig.id, outcome.retryAfterMs);
+            console.log(`  [timerule] persisted ${JSON.stringify(newDelay)} to config/forums/${forumConfig.id}.json`);
+          } catch (e) {
+            console.log(`  [timerule] WARN: could not update forum config: ${e.message}`);
+          }
+        }
         if (attempt >= maxAttempts) {
           return { status: "cooldown", error: outcome.message, retryAfterMs: outcome.retryAfterMs, ms: elapsed, attempt };
         }

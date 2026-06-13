@@ -1,44 +1,44 @@
 {
   "contents": [
     {
-      "title": "Chào {member_name}, làm quen nhé!",
-      "body": "Chào {member_name}! Mình là thành viên mới trên {domain}, thấy bạn khá active nên muốn làm quen. {Mình hy vọng|Mong rằng} chúng ta có thể {trao đổi|giao lưu} thêm nhé! 😊"
+      "title": "Chào <<member_name>>, làm quen nhé!",
+      "body": "Chào <<member_name>>! Mình là thành viên mới trên <<domain>>, thấy bạn khá active nên muốn làm quen. <<Mình hy vọng|Mong rằng>> chúng ta có thể <<trao đổi|giao lưu>> thêm nhé! 😊"
     },
     {
-      "title": "Hey {first_name}, nice to meet you!",
-      "body": "Hi {first_name}! Mình mới tham gia {domain}, thấy bạn {đăng bài hay|hoạt động tích cực} nên muốn kết bạn. {Bạn rảnh không?|Có thời gian không?} Cho mình làm quen nhé! 😄"
+      "title": "Hey <<first_name>>, nice to meet you!",
+      "body": "Hi <<first_name>>! Mình mới tham gia <<domain>>, thấy bạn <<đăng bài hay|hoạt động tích cực>> nên muốn kết bạn. <<Bạn rảnh không?|Có thời gian không?>> Cho mình làm quen nhé! 😄"
     },
     {
-      "title": "Xin chào {first_name} 👋",
-      "body": "Xin chào {first_name}! {Mình thấy bạn trên|Mình biết bạn qua} {domain} thấy {rất thú vị|khá hay}. {Hy vọng|Mong là} mình có thể {học hỏi từ|kết nối với} bạn nhiều hơn! 🙏"
+      "title": "Xin chào <<first_name>> 👋",
+      "body": "Xin chào <<first_name>>! <<Mình thấy bạn trên|Mình biết bạn qua>> <<domain>> thấy <<rất thú vị|khá hay>>. <<Hy vọng|Mong là>> mình có thể <<học hỏi từ|kết nối với>> bạn nhiều hơn! 🙏"
     },
     {
-      "title": "Chào bạn {first_name} - mong kết bạn",
-      "body": "Chào {first_name}! Mình {cũng|vừa} mới vào {domain} được ít hôm. {Thấy bạn đăng bài hay|Nhìn bạn active} nên muốn {làm quen|gửi lời chào}. Sau này có gì cùng {nhau trao đổi|chia sẻ} nhé! 🙌"
+      "title": "Chào bạn <<first_name>> - mong kết bạn",
+      "body": "Chào <<first_name>>! Mình <<cũng|vừa>> mới vào <<domain>> được ít hôm. <<Thấy bạn đăng bài hay|Nhìn bạn active>> nên muốn <<làm quen|gửi lời chào>>. Sau này có gì cùng <<nhau trao đổi|chia sẻ>> nhé! 🙌"
     },
     {
-      "title": "Hi {member_name} - fellow member here",
-      "body": "Hi {first_name}! Mình đang {tìm hiểu|khám phá} {domain} thấy bạn là người {chơi lâu năm|hoạt động tích cực}. {Bạn rảnh có thể|Có thể} chia sẻ {chút kinh nghiệm|đôi điều} cho mình không? Cảm ơn bạn nhiều! 🌟"
+      "title": "Hi <<member_name>> - fellow member here",
+      "body": "Hi <<first_name>>! Mình đang <<tìm hiểu|khám phá>> <<domain>> thấy bạn là người <<chơi lâu năm|hoạt động tích cực>>. <<Bạn rảnh có thể|Có thể>> chia sẻ <<chút kinh nghiệm|đôi điều>> cho mình không? Cảm ơn bạn nhiều! 🌟"
     },
     {
-      "title": "Chào {first_name} - kết nối cùng nhau",
-      "body": "Chào {first_name}! {Thấy bạn trên|Nhìn bạn ở} {domain} thấy {rất ấn tượng|khá thú vị}. Mình {cũng đang|vừa mới} tham gia. {Mong|Hy vọng} chúng ta có thể {làm quen|kết bạn} và {hỗ trợ|giúp đỡ} nhau! 🤝"
+      "title": "Chào <<first_name>> - kết nối cùng nhau",
+      "body": "Chào <<first_name>>! <<Thấy bạn trên|Nhìn bạn ở>> <<domain>> thấy <<rất ấn tượng|khá thú vị>>. Mình <<cũng đang|vừa mới>> tham gia. <<Mong|Hy vọng>> chúng ta có thể <<làm quen|kết bạn>> và <<hỗ trợ|giúp đỡ>> nhau! 🤝"
     },
     {
-      "title": "Hello {first_name} từ thành viên mới",
-      "body": "Hey {first_name}! Mình là {newbie|thành viên mới} ở {domain}, {đang tìm bạn bè|muốn kết nối} với mọi người. Bạn {có tips gì hay|cho mình xin tips} cho người mới không? {Cảm ơn|Thanks} bạn nhiều! 💡"
+      "title": "Hello <<first_name>> từ thành viên mới",
+      "body": "Hey <<first_name>>! Mình là <<newbie|thành viên mới>> ở <<domain>>, <<đang tìm bạn bè|muốn kết nối>> với mọi người. Bạn <<có tips gì hay|cho mình xin tips>> cho người mới không? <<Cảm ơn|Thanks>> bạn nhiều! 💡"
     },
     {
-      "title": "Chào {member_name} - lời chào thân thiện",
-      "body": "Chào {first_name}! {Đây là|Nhân tiện đây mình gửi} lời chào {thân thiện|thân mật} từ một thành viên mới của {domain}. {Mong|Hy vọng} bạn đón nhận {tích cực|nồng nhiệt}! {Sau này hợp tác nhé|Cùng nhau phát triển nhé}! 🤗"
+      "title": "Chào <<member_name>> - lời chào thân thiện",
+      "body": "Chào <<first_name>>! <<Đây là|Nhân tiện đây mình gửi>> lời chào <<thân thiện|thân mật>> từ một thành viên mới của <<domain>>. <<Mong|Hy vọng>> bạn đón nhận <<tích cực|nồng nhiệt>>! <<Sau này hợp tác nhé|Cùng nhau phát triển nhé>>! 🤗"
     },
     {
-      "title": "Hi {first_name} - connect cùng mình",
-      "body": "Chào {first_name}! Mình {vừa|mới} tham gia {domain}, {đang tìm hiểu|muốn học hỏi} thêm. {Thấy bạn|Cảm nhận được bạn} là người {giàu kinh nghiệm|nhiệt tình}. {Mong bạn|Hy vọng bạn} có thể {chỉ giáo|hỗ trợ} mình! 🌱"
+      "title": "Hi <<first_name>> - connect cùng mình",
+      "body": "Chào <<first_name>>! Mình <<vừa|mới>> tham gia <<domain>>, <<đang tìm hiểu|muốn học hỏi>> thêm. <<Thấy bạn|Cảm nhận được bạn>> là người <<giàu kinh nghiệm|nhiệt tình>>. <<Mong bạn|Hy vọng bạn>> có thể <<chỉ giáo|hỗ trợ>> mình! 🌱"
     },
     {
-      "title": "Xin chào {member_name} 👋",
-      "body": "Hi {first_name}! Mình {là|gửi lời chào từ} thành viên mới ở {domain}. {Thấy|Nhìn} bạn {khá active|đăng bài hay} nên {quyết định liên hệ|muốn làm quen}. {Mong|Hy vọng} bạn {chấp nhận|đón nhận} lời mời kết bạn này! ✨"
+      "title": "Xin chào <<member_name>> 👋",
+      "body": "Hi <<first_name>>! Mình <<là|gửi lời chào từ>> thành viên mới ở <<domain>>. <<Thấy|Nhìn>> bạn <<khá active|đăng bài hay>> nên <<quyết định liên hệ|muốn làm quen>>. <<Mong|Hy vọng>> bạn <<chấp nhận|đón nhận>> lời mời kết bạn này! ✨"
     }
   ]
 }

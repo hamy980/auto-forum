@@ -1,44 +1,44 @@
 {
   "contents": [
     {
-      "title": "Hi {member_name}, let's connect!",
-      "body": "Hi {first_name}! I just joined {domain} and noticed you're quite active. {Would love to|Looking forward to} connecting and learning from your experience. {Feel free to say hi anytime|Don't be shy, say hi}! 😊"
+      "title": "Hi <<member_name>>, let's connect!",
+      "body": "Hi <<first_name>>! I just joined <<domain>> and noticed you're quite active. <<Would love to|Looking forward to>> connecting and learning from your experience. <<Feel free to say hi anytime|Don't be shy, say hi>>! 😊"
     },
     {
-      "title": "Hello {first_name} - nice to meet you",
-      "body": "Hey {first_name}! {Newbie here|I'm new here}, looking to make friends with {seasoned|long-time} members. {Any tips for a beginner?|Got any advice for a newcomer?} Looking forward to chatting! 😄"
+      "title": "Hello <<first_name>> - nice to meet you",
+      "body": "Hey <<first_name>>! <<Newbie here|I'm new here>>, looking to make friends with <<seasoned|long-time>> members. <<Any tips for a beginner?|Got any advice for a newcomer?>> Looking forward to chatting! 😄"
     },
     {
-      "title": "Hey {first_name} 👋",
-      "body": "Hello {first_name}! {Saw your recent posts|Notice you're active} on {domain} and thought {I'd introduce myself|let's connect}. {Hope we can have|Would love to have} some {great|awesome} conversations! 🙌"
+      "title": "Hey <<first_name>> 👋",
+      "body": "Hello <<first_name>>! <<Saw your recent posts|Notice you're active>> on <<domain>> and thought <<I'd introduce myself|let's connect>>. <<Hope we can have|Would love to have>> some <<great|awesome>> conversations! 🙌"
     },
     {
-      "title": "Greetings {first_name} from a new member",
-      "body": "Hi {first_name}, also {a new member|new here} myself. I see you post a lot of {useful|helpful} stuff on {domain} - would love to learn from you. {Let's keep in touch|Let's stay connected}! 🤝"
+      "title": "Greetings <<first_name>> from a new member",
+      "body": "Hi <<first_name>>, also <<a new member|new here>> myself. I see you post a lot of <<useful|helpful>> stuff on <<domain>> - would love to learn from you. <<Let's keep in touch|Let's stay connected>>! 🤝"
     },
     {
-      "title": "Hi {member_name} - fellow member here",
-      "body": "Hey {first_name}! {I'm exploring|Just joined} {domain} and noticed you're {a long-time member|active here}. {Whenever you have time,|If you don't mind,} would you mind sharing {some tips|a few pointers}? Thanks a lot! 🙏"
+      "title": "Hi <<member_name>> - fellow member here",
+      "body": "Hey <<first_name>>! <<I'm exploring|Just joined>> <<domain>> and noticed you're <<a long-time member|active here>>. <<Whenever you have time,|If you don't mind,>> would you mind sharing <<some tips|a few pointers>>? Thanks a lot! 🙏"
     },
     {
-      "title": "Hello {first_name} - glad to find you",
-      "body": "Hi {first_name}! {Found you on|Came across your profile on} {domain} and {was impressed by your posts|thought we'd get along}. {I'm also new|Just signed up}, {let's connect|let's be friends}! 🌟"
+      "title": "Hello <<first_name>> - glad to find you",
+      "body": "Hi <<first_name>>! <<Found you on|Came across your profile on>> <<domain>> and <<was impressed by your posts|thought we'd get along>>. <<I'm also new|Just signed up>>, <<let's connect|let's be friends>>! 🌟"
     },
     {
-      "title": "Hi {first_name} - introduction",
-      "body": "Hey {first_name}! {Just dropping a quick hello|Sending you a friendly greeting} from a new member of {domain}. {Hope you|Hope to} {find this|finding this} interesting and {let's chat sometime|connect soon}! 💡"
+      "title": "Hi <<first_name>> - introduction",
+      "body": "Hey <<first_name>>! <<Just dropping a quick hello|Sending you a friendly greeting>> from a new member of <<domain>>. <<Hope you|Hope to>> <<find this|finding this>> interesting and <<let's chat sometime|connect soon>>! 💡"
     },
     {
-      "title": "Greetings {member_name}!",
-      "body": "Hi {first_name}! I'm {also active on|also into} {domain} and {noticed your contributions|saw you around}. {Would love to|Hope to} {collaborate|chat} sometime. {Take care|Have a great day}! 🤗"
+      "title": "Greetings <<member_name>>!",
+      "body": "Hi <<first_name>>! I'm <<also active on|also into>> <<domain>> and <<noticed your contributions|saw you around>>. <<Would love to|Hope to>> <<collaborate|chat>> sometime. <<Take care|Have a great day>>! 🤗"
     },
     {
-      "title": "Hi {first_name} - connect with me",
-      "body": "Hi {first_name}! {Just joined|New to} {domain}, {eager to learn|want to explore} more. {I can tell you're|I can see you're} {knowledgeable|experienced} here. {Mind sharing|Mind if I ask} some {tips|advice}? 🌱"
+      "title": "Hi <<first_name>> - connect with me",
+      "body": "Hi <<first_name>>! <<Just joined|New to>> <<domain>>, <<eager to learn|want to explore>> more. <<I can tell you're|I can see you're>> <<knowledgeable|experienced>> here. <<Mind sharing|Mind if I ask>> some <<tips|advice>>? 🌱"
     },
     {
-      "title": "Hello {first_name} 👋",
-      "body": "Hi {first_name}! {A new member|New to the community} here on {domain}. {Saw|Spotted} you're {quite active|posting great content} so I {decided to reach out|wanted to say hi}. {Hope|Hope} we can be {friends|connected}! ✨"
+      "title": "Hello <<first_name>> 👋",
+      "body": "Hi <<first_name>>! <<A new member|New to the community>> here on <<domain>>. <<Saw|Spotted>> you're <<quite active|posting great content>> so I <<decided to reach out|wanted to say hi>>. <<Hope|Hope>> we can be <<friends|connected>>! ✨"
     }
   ]
 }

@@ -31,7 +31,7 @@ export function pickOne(values, seedIndex = 0) {
 }
 
 export function resolveSpin(text) {
-  const spinRegex = /\{([^{}]*\|[^{}]*)\}/g;
+  const spinRegex = /<<([^<>]*\|[^<>]*)>>/g;
   let result = text;
   let prev;
   do {
@@ -45,7 +45,7 @@ export function resolveSpin(text) {
 }
 
 export function fillTemplate(template, context) {
-  return String(template).replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key) =>
+  return String(template).replace(/<<([a-zA-Z0-9_]+)>>/g, (_, key) =>
     context[key] === undefined || context[key] === null ? "" : String(context[key])
   );
 }

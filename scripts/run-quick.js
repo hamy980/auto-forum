@@ -152,14 +152,20 @@ async function main() {
   const profiles = await listProfiles();
   let profileIds = [];
   if (profiles.length > 0) {
+    console.log(`  -> GPM has ${profiles.length} profile(s) available`);
     const profileInput = await ask(
       rl,
-      `Profile IDs comma-separated (enter or "all" = use all ${profiles.length} profiles)`,
+      "Profile selection (Enter=all profiles, 'N'=first N profiles, or comma-separated UUIDs/names)",
       ""
     );
     const normalized = profileInput.trim().toLowerCase();
     if (!normalized || normalized === "all" || normalized === "*") {
       profileIds = profiles.map((p) => p.id);
+      console.log(`  -> Using all ${profileIds.length} profile(s) (round-robin across campaign)`);
+    } else if (/^\d+$/.test(normalized)) {
+      const n = Math.min(Number(normalized), profiles.length);
+      profileIds = profiles.slice(0, n).map((p) => p.id);
+      console.log(`  -> Using first ${profileIds.length} profile(s) (round-robin across campaign)`);
     } else {
       const requested = profileInput.split(",").map((s) => s.trim()).filter(Boolean);
       const knownIds = new Set(profiles.map((p) => p.id));
@@ -173,8 +179,9 @@ async function main() {
       if (unknown.length > 0) {
         console.log(`  -> Warning: ${unknown.length} profile(s) not found in GPM: ${unknown.join(", ")}`);
       }
+      console.log(`  -> Selected ${profileIds.length} profile(s)`);
     }
-    console.log(`  -> ${profileIds.length} profile(s) selected\n`);
+    console.log();
   } else {
     console.log("  -> GPM not reachable; profileIds will be empty (set later or pass --profiles)\n");
   }

@@ -52,6 +52,75 @@ async function validateForum(forumId) {
   return JSON.parse(await fs.readFile(configPath, "utf8"));
 }
 
+function buildNewForumConfig(forumId, baseUrl) {
+  const defaultPath = "/conversations/add?to={recipient}";
+  return {
+    id: forumId,
+    label: forumId,
+    baseUrl,
+    composeUrlTemplate: `${baseUrl.replace(/\/$/, "")}${defaultPath}`,
+    recipientEncoding: "xenforo-plus",
+    selectors: {
+      title: "input[name='title']",
+      body: "[contenteditable='true']",
+      submit: "button.button--icon--conversation"
+    },
+    submitIndex: 0,
+    successUrlIncludes: "/conversations/",
+    cooldownErrorIncludes: "You must wait at least",
+    permissionErrorIncludes: "do not have permission",
+    validationErrorSelectors: [".blockMessage", ".message--error", ".formRow--errors"],
+    inbox: {
+      listUrl: "/conversations/",
+      popupTrigger: ".p-navgroup-link--conversations",
+      unreadBadgeAttr: "data-badge",
+      popupBody: ".js-convMenuBody",
+      popupRow: ".menu-row",
+      popupRowHighlighted: ".menu-row--highlighted",
+      popupConversationLink: ".fauxBlockLink-blockLink",
+      popupTime: "time[data-time]"
+    },
+    conversation: {
+      messageBlock: ".message",
+      messageBody: ".message-body .bbWrapper",
+      messageAuthor: ".message-name a",
+      messageTime: "time[data-time]",
+      replyEditor: ".fr-element[contenteditable='true']",
+      replySubmit: "button.button--icon--reply"
+    },
+    fallbackReplies: {
+      fromOther: "Cảm ơn <<first_name>> đã phản hồi! Mình sẽ cập nhật thêm sớm nhé.",
+      fromSelf: "Cảm ơn bạn đã liên hệ! Mình sẽ phản hồi sớm nhé."
+    },
+    delayMs: { min: 60000, max: 80000 },
+    replyDelayMs: { min: 4000, max: 8000 },
+    timeouts: {
+      navigation: 60000,
+      waitFor: 15000,
+      closeBeforeStartMs: 2000,
+      cdpReadyMs: 30000,
+      cdpPollIntervalMs: 2000,
+      postSubmitMs: 1000,
+      closeProfileMs: 15000,
+      popupOpenMs: 3000,
+      popupCloseMs: 300,
+      inboxSettleMs: 2000,
+      conversationSettleMs: 1500,
+      postReplyMinMs: 4000,
+      postReplyMaxMs: 8000,
+      replyEditorClickMs: 500,
+      chatListWaitMs: 1500
+    },
+    retry: {
+      maxAttempts: 3,
+      postClickPollMs: 12000,
+      postClickPollIntervalMs: 500,
+      networkRetryDelayMs: 3000,
+      cooldownFallbackMs: 70000
+    }
+  };
+}
+
 async function loadContent(contentPath) {
   contentPath = unquote(contentPath);
   const absolute = resolveMaybeRelative(cwd, contentPath);
@@ -145,9 +214,23 @@ async function main() {
     forumConfig = await validateForum(domain);
     console.log(`  -> forum config OK (baseUrl: ${forumConfig.baseUrl})\n`);
   } catch (err) {
-    console.error(`[error] ${err.message}`);
-    rl.close();
-    process.exit(1);
+    console.log(`  -> ${err.message}`);
+    const choice = await ask(rl, "  Tao forum config moi? (yes/no)", "no");
+    if (!/^y(es)?$/i.test(choice)) {
+      console.error(`[error] aborting; create ${domain}.json under config/forums/ then retry.`);
+      rl.close();
+      process.exit(1);
+    }
+    const defaultUrl = `https://${domain}`;
+    const baseUrl = unquote(await ask(rl, `  Base URL (default: ${defaultUrl})`, defaultUrl));
+    const cfg = buildNewForumConfig(domain, baseUrl);
+    await ensureDir(forumsDir);
+    const cfgPath = path.join(forumsDir, `${domain}.json`);
+    await fs.writeFile(cfgPath, JSON.stringify(cfg, null, 2), "utf8");
+    console.log(`  -> wrote ${cfgPath}`);
+    console.log(`  -> NOTE: selectors are XenForo defaults; edit the file if your forum uses different markup.`);
+    console.log(`  -> NOTE: if this forum is real-domain and should not be tracked, add it to .gitignore.\n`);
+    forumConfig = cfg;
   }
 
   // 2. Member list

@@ -300,6 +300,7 @@ async function main() {
         } else {
           console.log(`  -> Using batch positions ${lo}-${hi}: ${profileIds.length} profile(s)`);
         }
+      } else {
         const tokens = profileInput.split(",").map((s) => s.trim()).filter(Boolean);
         const knownIds = new Set(candidates.map((p) => p.id));
         const knownNames = new Map(candidates.map((p) => [p.name.toLowerCase(), p.id]));

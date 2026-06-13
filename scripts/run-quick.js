@@ -3,7 +3,7 @@ import path from "node:path";
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { spawn } from "node:child_process";
-import { campaignsDir, dataDir, forumsDir } from "./lib/paths.js";
+import { campaignsDir, forumsDir } from "./lib/paths.js";
 import { ensureDir, resolveMaybeRelative } from "./lib/utils.js";
 
 const cwd = process.cwd();
@@ -161,9 +161,7 @@ async function main() {
     id,
     forumId,
     profileIds,
-    memberListPath: members.absolute.includes(dataDir)
-      ? path.relative(path.dirname(campaignsDir), members.absolute).replace(/\\/g, "/")
-      : memberPath,
+    memberListPath: members.absolute,
     titleTemplates: content.variants.map((v) => v.title),
     bodyTemplates: content.variants.map((v) => v.body),
     errorThreshold: 3

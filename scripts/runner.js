@@ -201,6 +201,7 @@ async function submitWithRetry({ page, forumConfig, composeUrl, title, body, max
 async function runProfile({ gpmClient, gpmConfig, forumConfig, campaign, profileId, recipientQueue, resume }) {
   const tracker = new ErrorTracker(campaign.errorThreshold ?? 3);
   const timeouts = forumConfig.timeouts ?? {};
+  const retry = forumConfig.retry ?? {};
 
   const profileResponse = await gpmClient.getProfile(profileId);
   const profile = profileResponse.data;
@@ -361,6 +362,7 @@ async function runProfile({ gpmClient, gpmConfig, forumConfig, campaign, profile
 async function runTelegramProfile({ gpmClient, gpmConfig, platformConfig, campaign, profileId, recipientQueue, resume, accountsMap, apiConfig }) {
   const tracker = new ErrorTracker(campaign.errorThreshold ?? 3);
   const timeouts = platformConfig.timeouts ?? {};
+  const retry = platformConfig.retry ?? {};
   const selectors = platformConfig.selectors ?? {};
 
   const profileResponse = await gpmClient.getProfile(profileId);

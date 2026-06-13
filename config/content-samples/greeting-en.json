@@ -1,0 +1,16 @@
+{
+  "titleTemplates": [
+    "Hi {first_name}, let's connect!",
+    "Hello {first_name} - nice to meet you",
+    "Hey {first_name} 👋",
+    "Greetings {first_name}!",
+    "Hi {first_name}, fellow member here"
+  ],
+  "bodyTemplates": [
+    "Hi {first_name}! I just joined the forum and noticed you're quite active. Would love to connect and learn from your experience. Feel free to say hi anytime! 😊",
+    "Hey {first_name}! Newbie here looking to make friends with seasoned members. Any tips for someone just getting started? Looking forward to chatting! 😄",
+    "Hello {first_name} 👋 Saw your recent posts and thought I'd introduce myself. Hope we can have some great conversations here!",
+    "Hi {first_name}, also a new member myself. I see you post a lot of useful stuff - would love to learn from you. Let's keep in touch! 🙌",
+    "Hey {first_name}! I'm exploring the forum and noticed you're a long-time member. Whenever you have time, would you mind sharing some tips? Thanks a lot! 🙏"
+  ]
+}

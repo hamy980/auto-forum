@@ -104,6 +104,7 @@ async function main() {
   const rl = readline.createInterface({ input, output });
 
   console.log("=== Quick Campaign Wizard ===\n");
+  console.log("(Ban co the nhap relative path nhu 'data/members/x.txt' hoac absolute path Windows nhu 'C:\\\\path\\\\to\\\\file.txt')\n");
 
   const memberPath = await ask(rl, "Member list file path (e.g. data/members/massagevua-test.txt)");
   let members;
@@ -127,7 +128,7 @@ async function main() {
     process.exit(1);
   }
 
-  const contentPath = await ask(rl, "Content file path (.json with contents[{title, body}])");
+  const contentPath = await ask(rl, "Content file path (.json with contents[{title, body}])  (absolute path OK)");
   let content;
   try {
     content = await loadContent(contentPath);

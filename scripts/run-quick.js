@@ -189,9 +189,12 @@ async function main() {
     if (candidates.length === 0) {
       console.log("  -> No candidates available; profileIds will be empty.\n");
     } else {
+      console.log("  -> Available profiles in this batch (1-indexed):");
+      candidates.forEach((p, i) => console.log(`     [${i + 1}] ${p.name}  (${p.id.slice(0, 8)}...)`));
+      console.log();
       const profileInput = await ask(
         rl,
-        `Profile selection (Enter=all ${candidates.length}, 'N'=first N, or comma-separated UUIDs/names)`,
+        `Profile selection: Enter=all ${candidates.length} | N=first N | A-B=range (e.g. 1-3) | N,M=positions or UUIDs/names`,
         ""
       );
       const normalized = profileInput.trim().toLowerCase();
@@ -202,18 +205,43 @@ async function main() {
         const n = Math.min(Number(normalized), candidates.length);
         profileIds = candidates.slice(0, n).map((p) => p.id);
         console.log(`  -> Using first ${profileIds.length} profile(s) in group`);
-      } else {
-        const requested = profileInput.split(",").map((s) => s.trim()).filter(Boolean);
+      } else if (/^\d+\s*-\s*\d+$/.test(normalized)) {
+        const [aRaw, bRaw] = normalized.split("-").map((s) => Number(s.trim()));
+        const a = Math.max(1, Math.min(candidates.length, aRaw));
+        const b = Math.max(1, Math.min(candidates.length, bRaw));
+        const lo = Math.min(a, b);
+        const hi = Math.max(a, b);
+        profileIds = candidates.slice(lo - 1, hi).map((p) => p.id);
+        if (profileIds.length === 0) {
+          console.log(`  -> Range ${aRaw}-${bRaw} yields no valid positions (group has ${candidates.length} profile(s))`);
+        } else {
+          console.log(`  -> Using batch positions ${lo}-${hi}: ${profileIds.length} profile(s)`);
+        }
+        const tokens = profileInput.split(",").map((s) => s.trim()).filter(Boolean);
         const knownIds = new Set(candidates.map((p) => p.id));
         const knownNames = new Map(candidates.map((p) => [p.name.toLowerCase(), p.id]));
-        profileIds = requested.map((r) => {
-          if (knownIds.has(r)) return r;
-          if (knownNames.has(r.toLowerCase())) return knownNames.get(r.toLowerCase());
-          return r;
-        });
-        const unknown = requested.filter((r) => !knownIds.has(r) && !knownNames.has(r.toLowerCase()));
+        const positionRe = /^\d+$/;
+        const out = [];
+        const unknown = [];
+        for (const t of tokens) {
+          if (positionRe.test(t)) {
+            const idx = Number(t) - 1;
+            if (idx >= 0 && idx < candidates.length) {
+              out.push(candidates[idx].id);
+            } else {
+              unknown.push(t);
+            }
+          } else if (knownIds.has(t)) {
+            out.push(t);
+          } else if (knownNames.has(t.toLowerCase())) {
+            out.push(knownNames.get(t.toLowerCase()));
+          } else {
+            unknown.push(t);
+          }
+        }
+        profileIds = out;
         if (unknown.length > 0) {
-          console.log(`  -> Warning: ${unknown.length} profile(s) not found in group: ${unknown.join(", ")}`);
+          console.log(`  -> Warning: ${unknown.length} unknown: ${unknown.join(", ")}`);
         }
         console.log(`  -> Selected ${profileIds.length} profile(s)`);
       }

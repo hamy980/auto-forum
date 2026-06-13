@@ -53,6 +53,37 @@ async function readValidationErrors(page, forumConfig) {
   return values;
 }
 
+async function dismissCookieBanner(page, forumConfig) {
+  const bannerCfg = forumConfig.cookieBanner;
+  if (!bannerCfg?.dismissSelector) return;
+  try {
+    const btn = page.locator(bannerCfg.dismissSelector).first();
+    await btn.waitFor({ state: "visible", timeout: bannerCfg.waitMs ?? 3000 }).catch(() => null);
+    if (await btn.isVisible().catch(() => false)) {
+      await btn.click({ timeout: bannerCfg.clickTimeoutMs ?? 3000 });
+      await sleep(bannerCfg.afterClickMs ?? 500);
+    }
+  } catch {
+    // Banner may not be present on every page; ignore.
+  }
+}
+
+async function gotoWithRetry(page, url, navigationTimeoutMs, retryDelayMs, attempts = 3) {
+  let lastErr;
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      await page.goto(url, { waitUntil: "domcontentloaded", timeout: navigationTimeoutMs });
+      return;
+    } catch (err) {
+      lastErr = err;
+      const isNetwork = /ERR_(CONNECTION_CLOSED|CONNECTION_RESET|CONNECTION_REFUSED|ABORTED|TIMEDOUT)|net::|TimeoutError/i.test(err.message);
+      if (!isNetwork || i === attempts - 1) throw err;
+      await sleep(retryDelayMs);
+    }
+  }
+  throw lastErr;
+}
+
 async function submitWithRetry({ page, forumConfig, composeUrl, title, body, maxAttempts = 3 }) {
   const selectors = forumConfig.selectors;
   const timeouts = forumConfig.timeouts ?? {};
@@ -134,7 +165,7 @@ async function submitWithRetry({ page, forumConfig, composeUrl, title, body, max
         const waitMs = outcome.retryAfterMs ?? retry.cooldownFallbackMs ?? 70000;
         console.log(`  [cooldown] waiting ${(waitMs / 1000).toFixed(0)}s before retry...`);
         await sleep(waitMs);
-        await page.goto(composeUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
+        await gotoWithRetry(page, composeUrl, timeouts.navigation ?? 60000, retry.networkRetryDelayMs ?? 5000, 3);
         await page.locator(selectors.title).first().waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
         await page.locator(selectors.body).first().waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
         await setLocatorValue(page.locator(selectors.title).first(), title);
@@ -150,7 +181,7 @@ async function submitWithRetry({ page, forumConfig, composeUrl, title, body, max
         return { status: "timeout", error: outcome.message, ms: elapsed, attempt };
       }
       await sleep(retry.networkRetryDelayMs ?? 3000);
-      await page.goto(composeUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
+      await gotoWithRetry(page, composeUrl, timeouts.navigation ?? 60000, retry.networkRetryDelayMs ?? 5000, 3);
       await page.locator(selectors.title).first().waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
       await page.locator(selectors.body).first().waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
       await setLocatorValue(page.locator(selectors.title).first(), title);
@@ -238,7 +269,8 @@ async function runProfile({ gpmClient, gpmConfig, forumConfig, campaign, profile
       const startMs = Date.now();
 
       try {
-        await page.goto(composeUrl, { waitUntil: "domcontentloaded", timeout: timeouts.navigation ?? 60000 });
+        await gotoWithRetry(page, composeUrl, timeouts.navigation ?? 60000, retry.networkRetryDelayMs ?? 5000, 3);
+        await dismissCookieBanner(page, forumConfig);
         await page.locator(forumConfig.selectors.title).first().waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
         await page.locator(forumConfig.selectors.body).first().waitFor({ state: "visible", timeout: timeouts.waitFor ?? 15000 });
         await setLocatorValue(page.locator(forumConfig.selectors.title).first(), content.title);

@@ -117,6 +117,12 @@ function buildNewForumConfig(forumId, baseUrl) {
       postClickPollIntervalMs: 500,
       networkRetryDelayMs: 3000,
       cooldownFallbackMs: 70000
+    },
+    cookieBanner: {
+      dismissSelector: "#cookie-accept",
+      waitMs: 3000,
+      clickTimeoutMs: 3000,
+      afterClickMs: 500
     }
   };
 }

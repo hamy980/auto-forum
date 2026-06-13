@@ -57,10 +57,19 @@ goto menu
 echo.
 set /p campaign="Nhap campaign ID (vd: massagevua-greet): "
 set /p profile="Profile IDs (Enter = dung tat ca trong campaign): "
+set /p resumeopt="Resume? (y/n, mac dinh n): "
 if "%profile%"=="" (
-  node scripts/runner.js --campaign %campaign%
+  if /i "%resumeopt%"=="y" (
+    node scripts/runner.js --campaign %campaign% --resume
+  ) else (
+    node scripts/runner.js --campaign %campaign%
+  )
 ) else (
-  node scripts/runner.js --campaign %campaign% --profiles %profile%
+  if /i "%resumeopt%"=="y" (
+    node scripts/runner.js --campaign %campaign% --profiles %profile% --resume
+  ) else (
+    node scripts/runner.js --campaign %campaign% --profiles %profile%
+  )
 )
 pause
 goto menu

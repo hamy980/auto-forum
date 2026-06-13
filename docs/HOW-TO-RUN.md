@@ -34,6 +34,8 @@ node scripts/runner.js --campaign massagevua-greet4 --resume
 node scripts/runner.js --campaign sample-campaign --profiles <id1>,<id2>
 ```
 
+`--resume` đọc state của **từng profile** từ `runtime/<campaignId>/<profileId>-state.json` (queue còn lại + index). Profiles nào có state thì resume từ queue đó; profiles nào chưa có state (mới thêm vào campaign) thì được gán lại từ full member list (round-robin với các profile "mới"). Không duplicate send.
+
 ### Cách C — Tạo campaign thủ công
 
 Tạo `campaigns/<id>.json` theo schema, rồi chạy cách B.

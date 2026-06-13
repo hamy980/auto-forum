@@ -568,22 +568,6 @@ async function main() {
   const gpmClient = new GpmClient(gpmConfig.baseUrl);
   const apiConfig = isTelegram ? await loadVerificationApiConfig() : null;
 
-  let recipientQueue;
-  let resumeState = null;
-
-  if (args.resume) {
-    resumeState = await readState(runtimeDir, args.campaignId, args.profileIds[0] ?? campaign.profileIds[0]);
-  }
-
-  if (resumeState?.recipientQueue) {
-    recipientQueue = resumeState.recipientQueue;
-    console.log(`Resuming with ${recipientQueue.length} remaining recipients`);
-  } else {
-    recipientQueue = campaign.memberSourcePath
-      ? await (await import("./lib/campaign-sources.js")).loadMembersFromSource(campaign.memberSourcePath)
-      : await loadMemberList(campaign);
-  }
-
   const profileIds = args.profileIds.length > 0 ? args.profileIds : campaign.profileIds;
   if (profileIds.length === 0) {
     throw new Error("No profile ids. Set campaign.profileIds or pass --profiles");
@@ -601,22 +585,71 @@ async function main() {
   }
 
   const platformLabel = isTelegram ? "Telegram" : `Forum: ${campaign.forumId}`;
-  console.log(`Campaign: ${args.campaignId} | ${platformLabel} | Recipients: ${recipientQueue.length} | Profiles: ${profileIds.length}`);
 
-  // Distribute recipients across profiles (round-robin)
-  const queues = [];
-  for (let i = 0; i < profileIds.length; i++) queues.push([]);
-  recipientQueue.forEach((r, i) => queues[i % profileIds.length].push(r));
+  // Build per-profile queues. When resuming, use each profile's saved state if present;
+  // otherwise (or for profiles with no state yet) redistribute the still-unprocessed
+  // recipients across them in round-robin order.
+  const queues = new Array(profileIds.length).fill(null).map(() => []);
+  const perProfileResume = new Array(profileIds.length).fill(null);
+  let totalRemaining = 0;
+
+  if (args.resume) {
+    let freshQueue = null;
+    for (let i = 0; i < profileIds.length; i += 1) {
+      const pid = profileIds[i];
+      const state = await readState(runtimeDir, args.campaignId, pid);
+      if (state?.recipientQueue) {
+        queues[i] = state.recipientQueue;
+        perProfileResume[i] = state;
+        totalRemaining += queues[i].length;
+        console.log(`  [resume] ${pid}: ${queues[i].length} remaining`);
+      } else {
+        if (!freshQueue) {
+          freshQueue = campaign.memberSourcePath
+            ? await (await import("./lib/campaign-sources.js")).loadMembersFromSource(campaign.memberSourcePath)
+            : await loadMemberList(campaign);
+        }
+        perProfileResume[i] = null;
+      }
+    }
+    const needAssign = profileIds.filter((_, i) => perProfileResume[i] === null);
+    if (needAssign.length > 0) {
+      // Distribute full member list round-robin to profiles that have no state yet.
+      const memberList = campaign.memberSourcePath
+        ? await (await import("./lib/campaign-sources.js")).loadMembersFromSource(campaign.memberSourcePath)
+        : await loadMemberList(campaign);
+      const buckets = new Map(needAssign.map((p) => [p, []]));
+      memberList.forEach((m, idx) => {
+        const pid = needAssign[idx % needAssign.length];
+        buckets.get(pid).push(m);
+      });
+      for (let i = 0; i < profileIds.length; i += 1) {
+        if (perProfileResume[i] === null) {
+          queues[i] = buckets.get(profileIds[i]) ?? [];
+          totalRemaining += queues[i].length;
+          console.log(`  [resume] ${profileIds[i]}: no prior state, assigned ${queues[i].length} recipients`);
+        }
+      }
+    }
+  } else {
+    const memberList = campaign.memberSourcePath
+      ? await (await import("./lib/campaign-sources.js")).loadMembersFromSource(campaign.memberSourcePath)
+      : await loadMemberList(campaign);
+    memberList.forEach((r, i) => queues[i % profileIds.length].push(r));
+    totalRemaining = memberList.length;
+  }
+
+  console.log(`Campaign: ${args.campaignId} | ${platformLabel} | Recipients remaining: ${totalRemaining} | Profiles: ${profileIds.length}`);
 
   // Pick the right runner based on platform
   const runFn = isTelegram
-    ? (pid, q) => runTelegramProfile({ gpmClient, gpmConfig, platformConfig, campaign, profileId: pid, recipientQueue: q, resume: resumeState, accountsMap, apiConfig })
-    : (pid, q) => runProfile({ gpmClient, gpmConfig, forumConfig, campaign, profileId: pid, recipientQueue: q, resume: resumeState });
+    ? (pid, q, rs) => runTelegramProfile({ gpmClient, gpmConfig, platformConfig, campaign, profileId: pid, recipientQueue: q, resume: rs, accountsMap, apiConfig })
+    : (pid, q, rs) => runProfile({ gpmClient, gpmConfig, forumConfig, campaign, profileId: pid, recipientQueue: q, resume: rs });
 
   // Run all profiles in parallel — each with its own queue and browser
   const results = await Promise.allSettled(
     profileIds.map((pid, i) =>
-      runFn(pid, queues[i])
+      runFn(pid, queues[i], perProfileResume[i])
         .catch(err => {
           console.error(`[${pid}] Profile failed: ${err.message}`);
           return { profileId: pid, error: err.message };
